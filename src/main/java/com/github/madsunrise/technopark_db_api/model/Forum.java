@@ -10,10 +10,11 @@ public class Forum {
     private String user;
     private long userId;
 
-    public Forum(String name, String shortName, String user) {
+    public Forum(String name, String shortName, String user, long userId) {
         this.name = name;
         this.shortName = shortName;
         this.user = user;
+        this.userId = userId;
     }
 
     public long getId() {

@@ -23,12 +23,21 @@ public class Post {
     private boolean spam;
     private boolean deleted;
 
-    public Post(String message, LocalDateTime date, long threadId, String user, String forum) {
+    public Post(String message, LocalDateTime date, long threadId, String user, long userId, String forum, long forumId,
+                long parent, boolean approved, boolean highlighted, boolean edited, boolean spam, boolean deleted) {
         this.message = message;
         this.date = date;
         this.threadId = threadId;
         this.user = user;
+        this.userId = userId;
         this.forum = forum;
+        this.forumId = forumId;
+        this.parent = parent;
+        this.approved = approved;
+        this.highlighted = highlighted;
+        this.edited = edited;
+        this.spam = spam;
+        this.deleted = deleted;
     }
 
     public long getId() {

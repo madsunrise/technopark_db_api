@@ -11,20 +11,14 @@ public class User {
     private String name;
     private String email;
     private String about;
-    private boolean isAnonymous;
+    private boolean anonymous;
 
-
-
-    public User(String username, String name, String email, String about) {
-        this(username, name, email, about, false);
-    }
-
-    public User(String username, String name, String email, String about, boolean isAnonymous) {
+    public User(String username, String name, String email, String about, boolean anonymous) {
         this.username = username;
         this.name = name;
         this.email = email;
         this.about = about;
-        this.isAnonymous = isAnonymous;
+        this.anonymous = anonymous;
     }
 
     public long getId() {
@@ -64,10 +58,10 @@ public class User {
     }
 
     public boolean isAnonymous() {
-        return isAnonymous;
+        return anonymous;
     }
 
     public void setAnonymous(boolean anonymous) {
-        isAnonymous = anonymous;
+        this.anonymous = anonymous;
     }
 }

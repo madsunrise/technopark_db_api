@@ -14,18 +14,22 @@ public class Thread {
     private String user;
     private long userId;
     private String forum;
-    private String forumId;
+    private long forumId;
     private boolean closed;
     private boolean deleted;
 
-    public Thread(String title, String message, LocalDateTime date, String slug, String user, String forum, boolean closed) {
+    public Thread(String title, String message, LocalDateTime date, String slug,
+                  String user, long userId, String forum, long forumId, boolean closed, boolean deleted) {
         this.title = title;
         this.message = message;
         this.date = date;
         this.slug = slug;
         this.user = user;
+        this.userId = userId;
         this.forum = forum;
+        this.forumId = forumId;
         this.closed = closed;
+        this.deleted = deleted;
     }
 
     public long getId() {
@@ -88,11 +92,11 @@ public class Thread {
         this.forum = forum;
     }
 
-    public String getForumId() {
+    public long getForumId() {
         return forumId;
     }
 
-    public void setForumId(String forumId) {
+    public void setForumId(long forumId) {
         this.forumId = forumId;
     }
 
