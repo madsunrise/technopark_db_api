@@ -7,7 +7,7 @@ public final class CustomResponse {
         private final int code;
         private final String reason;
 
-        private CustomResponse(int code, String reason) {
+        public CustomResponse(int code, String reason) {
             this.code = code;
             this.reason = reason;
         }
