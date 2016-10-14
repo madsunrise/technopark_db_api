@@ -10,7 +10,6 @@ import com.github.madsunrise.technopark_db_api.model.User;
 import com.github.madsunrise.technopark_db_api.response.CustomResponse;
 import org.springframework.stereotype.Service;
 
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
@@ -20,26 +19,7 @@ import java.util.List;
  */
 @Service
 public class DBServiceImpl implements DBService {
-    private Connection connection = null;
-    private UserDAO userDAO;
-
-
-    DBServiceImpl() throws SQLException{
-        try {
-            Class.forName(Config.SQL_DRIVER);
-        } catch (ClassNotFoundException e) {
-            System.out.println("Where is your JDBC Driver?");
-            e.printStackTrace();
-            return;
-        }
-
-        System.out.println("MySQL JDBC Driver Registered!");
-        connection = DriverManager
-                    .getConnection(Config.DATABASE_URL,Config.DATABASE_USER, Config.DATABASE_PASSWORD);
-
-
-        userDAO = new UserDAOImpl(connection);
-    }
+    private final UserDAO userDAO = new UserDAOImpl();
 
     @Override
     public CustomResponse clear() {
@@ -55,7 +35,7 @@ public class DBServiceImpl implements DBService {
     public CustomResponse createForum(String name, String shortName, String userEmail) {
         User user = userDAO.getByEmail(userEmail);
         Forum forum = new ForumBuilder(name, shortName, userEmail, user.getId()).build();
-        return new CustomResponse(0, "r");
+        return new CustomResponse(0, null);
     }
 
     @Override

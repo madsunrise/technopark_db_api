@@ -1,6 +1,8 @@
 package com.github.madsunrise.technopark_db_api.model;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by ivan on 08.10.16.
@@ -16,15 +18,22 @@ public class Post {
     private long userId;
     private String forum;
     private long forumId;
-    private long parent;
+    private Long parent;
     private boolean approved;
     private boolean highlighted;
     private boolean edited;
     private boolean spam;
     private boolean deleted;
 
+    private int likes;
+    private int dislikes;
+    private int points;
+
+
+    private static final AtomicLong ID_GENETATOR = new AtomicLong(0);
+
     public Post(String message, LocalDateTime date, long threadId, String user, long userId, String forum, long forumId,
-                long parent, boolean approved, boolean highlighted, boolean edited, boolean spam, boolean deleted) {
+                Long parent, boolean approved, boolean highlighted, boolean edited, boolean spam, boolean deleted) {
         this.message = message;
         this.date = date;
         this.threadId = threadId;
@@ -38,6 +47,7 @@ public class Post {
         this.edited = edited;
         this.spam = spam;
         this.deleted = deleted;
+        this.id = ID_GENETATOR.getAndIncrement();
     }
 
     public long getId() {
@@ -55,6 +65,11 @@ public class Post {
 
     public LocalDateTime getDate() {
         return date;
+    }
+
+    public String getDateStr() {
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return date.format(formatter);
     }
 
     public void setDate(LocalDateTime date) {
@@ -101,11 +116,11 @@ public class Post {
         this.forumId = forumId;
     }
 
-    public long getParent() {
+    public Long getParent() {
         return parent;
     }
 
-    public void setParent(long parent) {
+    public void setParent(Long parent) {
         this.parent = parent;
     }
 
@@ -147,5 +162,37 @@ public class Post {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public int getLikes() {
+        return likes;
+    }
+
+    public void setLikes(int likes) {
+        this.likes = likes;
+    }
+
+    public int getDislikes() {
+        return dislikes;
+    }
+
+    public void setDislikes(int dislikes) {
+        this.dislikes = dislikes;
+    }
+
+    public int getPoints() {
+        return points;
+    }
+
+    public void setPoints(int points) {
+        this.points = points;
+    }
+
+    public void like() {
+        likes++;
+    }
+
+    public void dislike() {
+        dislikes++;
     }
 }

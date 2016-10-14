@@ -1,0 +1,172 @@
+package com.github.madsunrise.technopark_db_api.controllers;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.madsunrise.technopark_db_api.Codes;
+import com.github.madsunrise.technopark_db_api.DAO.PostDAO;
+import com.github.madsunrise.technopark_db_api.DAO.PostDAOImpl;
+import com.github.madsunrise.technopark_db_api.response.CustomResponse;
+import com.github.madsunrise.technopark_db_api.response.PostDetails;
+import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
+import com.github.madsunrise.technopark_db_api.response.PostId;
+import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+/**
+ * Created by ivan on 12.10.16.
+ */
+@RestController
+public class PostController {
+    final private PostDAO postDAO = new PostDAOImpl();
+
+    @RequestMapping(path = "/db/api/post/create", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse create(@RequestBody CreateRequest request) {
+        if (StringUtils.isEmpty(request.date) ||
+                StringUtils.isEmpty(request.message) || StringUtils.isEmpty(request.user)
+                || StringUtils.isEmpty(request.forum)) {
+            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+        }
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        final LocalDateTime date = LocalDateTime.parse(request.date, formatter);
+        final PostDetails<String, String, String> result = postDAO.create(date, request.thread, request.message,
+                request.user, request.forum, request.parent, request.approved, request.highlighted, request.edited,
+                request.spam, request.deleted);
+        if (result == null) {
+            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parameters");
+        }
+        return new CustomResponse<>(Codes.OK, result);
+    }
+
+
+
+    @RequestMapping(path = "/db/api/post/details", method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse details(@RequestParam("post") int postId,
+                                  @RequestParam(value = "related", required = false) List<String> array) {
+        final PostDetailsExtended result = postDAO.getDetails(postId, array);
+        if (result == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
+        }
+        return new CustomResponse<>(Codes.OK, result);
+    }
+
+
+
+
+    @RequestMapping(path = "/db/api/post/list/", method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse listByForum(@RequestParam(value = "forum", required = false) String forumShortName,
+                               @RequestParam(value = "thread",required = false) Long threadId,
+                               @RequestParam(value = "since", required = false) String sinceStr,
+                               @RequestParam(value = "limit", required = false) Integer limit,
+                               @RequestParam(value = "order", required = false, defaultValue = "desc") String order) {
+
+        if (StringUtils.isEmpty(forumShortName) && threadId == null) {
+            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+        }
+
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime since = null;
+        if (!StringUtils.isEmpty(sinceStr)) {
+            since = LocalDateTime.parse(sinceStr, formatter);
+        }
+
+
+        final List<PostDetailsExtended> result;
+        if (forumShortName != null) {
+            result = postDAO.getPosts(forumShortName, since, limit, order);
+        }
+        else {
+            result = postDAO.getPosts(threadId, since, limit, order);
+        }
+
+        if (result == null || result.isEmpty()) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "No posts");
+        }
+
+        return new CustomResponse<>(Codes.OK, result);
+    }
+
+
+    @RequestMapping(path = "/db/api/post/remove", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse remove(@RequestBody MyLong postId) {
+        final PostId result = postDAO.remove(postId.getPostId());
+        if (result == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "Post not found");
+        }
+        return new CustomResponse<>(Codes.OK, result);
+    }
+
+
+
+
+
+    private static class MyLong {
+        @JsonProperty("post")
+        private long postId;
+
+        @SuppressWarnings("unused")
+        MyLong() {
+        }
+
+        public MyLong(long postId) {
+            this.postId = postId;
+        }
+
+        public long getPostId() {
+            return postId;
+        }
+    }
+
+        private static class CreateRequest {
+        @JsonProperty("date")
+        private String date;
+        @JsonProperty("message")
+        private String message;
+        @JsonProperty("thread")
+        private long thread;
+        @JsonProperty("user")
+        private String user;
+        @JsonProperty("forum")
+        private String forum;
+
+        @JsonProperty(value = "parent", required = false)
+        private Long parent;
+        @JsonProperty(value = "isApproved", required = false)
+        private boolean approved;
+        @JsonProperty(value = "isHighlighted", required = false)
+        private boolean highlighted;
+        @JsonProperty(value = "isEdited", required = false)
+        private boolean edited;
+        @JsonProperty(value = "isSpam", required = false)
+        private boolean spam;
+        @JsonProperty(value = "isDeleted", required = false)
+        private boolean deleted;
+
+        @SuppressWarnings("unused")
+        CreateRequest() {
+        }
+
+        CreateRequest(String date, String message, long thread, String user, String forum, Long parent,
+                      boolean approved, boolean highlighted, boolean edited, boolean spam, boolean deleted) {
+            this.date = date;
+            this.message = message;
+            this.thread = thread;
+            this.user = user;
+            this.forum = forum;
+            this.parent = parent;
+            this.approved = approved;
+            this.highlighted = highlighted;
+            this.edited = edited;
+            this.spam = spam;
+            this.deleted = deleted;
+        }
+    }
+}

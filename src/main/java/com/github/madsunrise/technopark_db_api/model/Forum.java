@@ -1,5 +1,9 @@
 package com.github.madsunrise.technopark_db_api.model;
 
+import org.json.JSONObject;
+
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * Created by ivan on 08.10.16.
  */
@@ -10,15 +14,22 @@ public class Forum {
     private String user;
     private long userId;
 
+    private static final AtomicLong ID_GENETATOR = new AtomicLong(0);
+
     public Forum(String name, String shortName, String user, long userId) {
         this.name = name;
         this.shortName = shortName;
         this.user = user;
         this.userId = userId;
+        this.id = ID_GENETATOR.getAndIncrement();
     }
 
     public long getId() {
         return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -51,5 +62,13 @@ public class Forum {
 
     public void setUserId(long userId) {
         this.userId = userId;
+    }
+
+    public JSONObject toJSON() {
+        JSONObject json = new JSONObject();
+        json.put("id", 1);
+        json.put("name", name);
+        json.put("short_name", shortName);
+        return  json;
     }
 }

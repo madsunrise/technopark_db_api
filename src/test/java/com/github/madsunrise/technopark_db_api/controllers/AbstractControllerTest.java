@@ -1,4 +1,4 @@
-package com.github.madsunrise.technopark_db_api.main;
+package com.github.madsunrise.technopark_db_api.controllers;
 
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +10,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
@@ -25,6 +24,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 public abstract class AbstractControllerTest {
     @Autowired
     protected MockMvc mockMvc;
+    protected String defaultEmail = "example@mail.ru";
+    protected String defaultName = "John";
 
 
     protected ResultActions createUser() throws Exception {
@@ -33,13 +34,15 @@ public abstract class AbstractControllerTest {
     }
 
     protected ResultActions createUser(String email) throws Exception {
-        return createUser(email, true);
+        return createUser(email, false);
     }
 
-    protected ResultActions createUser(String email, boolean withAnonymous) throws Exception {
+    protected ResultActions createUser(String email, boolean isAnonymous) throws Exception {
         String user = "{\"username\": \"user1\", \"about\": \"hello im user1\",";
-        if (withAnonymous) user += " \"isAnonymous\": false,";
-        user += " \"name\": \"John\", \"email\": \"" + email + "\"}";
+        if (isAnonymous) {
+            user += " \"isAnonymous\": true,";
+        }
+        user += " \"name\": \"" + defaultName + "\", \"email\": \"" + email + "\"}";
 
         return mockMvc.perform(post("/db/api/user/create/")
                 .content(user)

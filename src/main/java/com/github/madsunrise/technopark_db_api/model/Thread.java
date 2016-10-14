@@ -1,6 +1,10 @@
 package com.github.madsunrise.technopark_db_api.model;
 
+import com.sun.xml.internal.bind.v2.model.core.ID;
+
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by ivan on 08.10.16.
@@ -17,6 +21,12 @@ public class Thread {
     private long forumId;
     private boolean closed;
     private boolean deleted;
+    private int likes;
+    private int dislikes;
+    private int points;
+    private int posts;
+
+    private static final AtomicLong ID_GENETATOR = new AtomicLong(0);
 
     public Thread(String title, String message, LocalDateTime date, String slug,
                   String user, long userId, String forum, long forumId, boolean closed, boolean deleted) {
@@ -30,6 +40,8 @@ public class Thread {
         this.forumId = forumId;
         this.closed = closed;
         this.deleted = deleted;
+
+        this.id = ID_GENETATOR.getAndIncrement();
     }
 
     public long getId() {
@@ -54,6 +66,11 @@ public class Thread {
 
     public LocalDateTime getDate() {
         return date;
+    }
+
+    public String getDateStr() {
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return date.format(formatter);
     }
 
     public void setDate(LocalDateTime date) {
@@ -114,5 +131,55 @@ public class Thread {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public int getLikes() {
+        return likes;
+    }
+
+    public void setLikes(int likes) {
+        this.likes = likes;
+    }
+
+    public int getDislikes() {
+        return dislikes;
+    }
+
+    public void setDislikes(int dislikes) {
+        this.dislikes = dislikes;
+    }
+
+    public int getPoints() {
+        return points;
+    }
+
+    public void setPoints(int points) {
+        this.points = points;
+    }
+
+    public int getPosts() {
+        return posts;
+    }
+
+    public void setPosts(int posts) {
+        this.posts = posts;
+    }
+
+    public void addPost() {
+        posts++;
+    }
+    public void removePost() {
+        posts--;
+    }
+
+    public void like() {
+        likes++;
+    }
+    public void dislike() {
+        likes--;
     }
 }
