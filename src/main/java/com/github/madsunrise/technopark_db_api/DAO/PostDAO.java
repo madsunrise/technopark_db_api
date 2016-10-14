@@ -24,5 +24,6 @@ public interface PostDAO {
     List<PostDetailsExtended> getPostsDetails(long threadId,
                                               LocalDateTime since, Integer limit, String order);
     Long remove (long postId);
+    Long restore (long postId);
     void markDeleted(long threadId);
 }

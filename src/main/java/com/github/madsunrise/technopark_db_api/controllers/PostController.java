@@ -103,6 +103,17 @@ public class PostController {
         return new CustomResponse<>(Codes.OK, result);
     }
 
+    @RequestMapping(path = "/db/api/post/restore", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse restore(@RequestBody PostId postId) {
+        final Long id = postDAO.restore(postId.getPostId());
+        if (id == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "Post not found");
+        }
+        final PostId result = new PostId(id);
+        return new CustomResponse<>(Codes.OK, result);
+    }
+
 
 
 

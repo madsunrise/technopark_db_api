@@ -222,4 +222,18 @@ public class PostDAOImpl implements PostDAO {
         logger.info("Removing post with ID={}", postId);
         return post.getId();
     }
+
+    @Override
+    public Long restore(long postId) {
+        final Post post = idToPost.get(postId);
+        if (post == null) {
+            logger.info("Error restoring post with ID={} because it does not exist!", postId);
+            return null;
+        }
+        post.setDeleted(false);
+        final Thread thread = new ThreadDAOImpl().getById(post.getThreadId());
+        thread.addPost();
+        logger.info("Restoring post with ID={} is success", postId);
+        return post.getId();
+    }
 }
