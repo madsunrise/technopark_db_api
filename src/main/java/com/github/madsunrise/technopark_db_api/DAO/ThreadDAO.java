@@ -15,9 +15,12 @@ public interface ThreadDAO {
     ThreadDetails create (String forum, String title, boolean closed, String userEmail, LocalDateTime date,
                           String message, String slug, /*optional*/ boolean deleted);
     Long close (long threadId);
+    Long open (long threadId);
     ThreadDetailsExtended getDetails (long threadId, List<String> related);
     void clear();
     long getAmount();
     long save (Thread thread);
     Long remove (long threadId);
+    Long subscribe (long threadId, String userEmail);
+    Long unsubscribe (long threadId, String userEmail);
 }

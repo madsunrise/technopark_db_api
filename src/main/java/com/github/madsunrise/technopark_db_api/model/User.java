@@ -3,10 +3,7 @@ package com.github.madsunrise.technopark_db_api.model;
 
 import com.github.madsunrise.technopark_db_api.DAO.UserDAOImpl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -20,9 +17,9 @@ public class User {
     private String email;
     private String about;
     private boolean anonymous;
-    private List<String> followers = new ArrayList<>();
-    private List<String> following = new ArrayList<>();
-    private List<Integer> subscriptions = new ArrayList<>();
+    private Set<String> followers = new HashSet<>();
+    private Set<String> following = new HashSet<>();
+    private Set<Long> subscriptions = new HashSet<>();
 
     private static final AtomicLong ID_GENETATOR = new AtomicLong(0);
 
@@ -83,86 +80,61 @@ public class User {
         this.anonymous = anonymous;
     }
 
-    public List<String> getFollowers() {
-        Collections.sort(followers);
+    public Set<String> getFollowers() {;
         return followers;
     }
 
-    public List<String> getFollowers (Integer limit, String order, Integer sinceId) {
-        if (order == null || !order.equals("asc")) {
-            order = "desc";
-        }
-        else {
-            order = "asc";
-        }
-        List<String> result = new ArrayList<>();
 
-        if (limit == null) {
-            limit = followers.size();
-        }
-        if (sinceId == null) {
-            sinceId = -1;
-        }
-
-        for (int i = 0; i < followers.size() && i < limit; i++) {
-            String email = followers.get(i);
-            User user = new UserDAOImpl().getByEmail(email);
-            if (user.getId() >= sinceId) {
-                result.add(email);
-            }
-        }
-        if (order.equals("asc")) {
-            Collections.sort(result);
-        }
-        else {
-            Collections.sort(result, Collections.reverseOrder());
-        }
-        return result;
-    }
-
-
-    public List<String> getFollowing() {
-        Collections.sort(following);
+//
+//
+    public Set<String> getFollowing() {
         return following;
     }
-    public List<String> getFollowing (Integer limit, String order, Integer sinceId) {
-        if (order == null || !order.equals("asc")) {
-            order = "desc";
-        }
-        else {
-            order = "asc";
-        }
-        List<String> result = new ArrayList<>();
+//    public List<String> getFollowing (Integer limit, String order, Integer sinceId) {
+//        if (order == null || !order.equals("asc")) {
+//            order = "desc";
+//        }
+//        else {
+//            order = "asc";
+//        }
+//        List<String> result = new ArrayList<>();
+//
+//        if (limit == null) {
+//            limit = following.size();
+//        }
+//        if (sinceId == null) {
+//            sinceId = -1;
+//        }
+//
+//        for (int i = 0; i < following.size() && i < limit; i++) {
+//            String email = following.get(i);
+//            User user = new UserDAOImpl().getByEmail(email);
+//            if (user.getId() >= sinceId) {
+//                result.add(email);
+//            }
+//        }
+//        if (order.equals("asc")) {
+//            Collections.sort(result);
+//        }
+//        else {
+//            Collections.sort(result, Collections.reverseOrder());
+//        }
+//        return result;
+//    }
 
-        if (limit == null) {
-            limit = following.size();
-        }
-        if (sinceId == null) {
-            sinceId = -1;
-        }
 
-        for (int i = 0; i < following.size() && i < limit; i++) {
-            String email = following.get(i);
-            User user = new UserDAOImpl().getByEmail(email);
-            if (user.getId() >= sinceId) {
-                result.add(email);
-            }
-        }
-        if (order.equals("asc")) {
-            Collections.sort(result);
-        }
-        else {
-            Collections.sort(result, Collections.reverseOrder());
-        }
-        return result;
+
+
+    public Set<Long> getSubscriptions() {
+        return subscriptions;
     }
 
+    public void subscribe (Long threadId) {
+        subscriptions.add(threadId);
+    }
 
-
-
-    public List<Integer> getSubscriptions() {
-        Collections.sort(subscriptions);
-        return subscriptions;
+    public void unsubscribe (Long threadId) {
+        subscriptions.remove(threadId);
     }
 
     public void addFollower (String follower) {

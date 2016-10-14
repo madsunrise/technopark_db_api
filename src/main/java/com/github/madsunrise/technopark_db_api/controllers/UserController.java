@@ -101,7 +101,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse listFollowers(@RequestParam("user") String email,
                                         @RequestParam(value = "limit", required = false) Integer limit,
-                                        @RequestParam(value = "order", required = false) String order,
+                                        @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
                                         @RequestParam(value = "since_id", required = false) Integer sinceId){
         final UserDetailsExtended result = userDAO.getFollowers(email, limit, order, sinceId);
         if (result == null) {

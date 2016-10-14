@@ -60,11 +60,23 @@ public class ThreadDAOImpl implements ThreadDAO {
     public Long close(long threadId) {
         final Thread thread = idToThread.get(threadId);
         if (thread == null) {
-            logger.info("Error closing thread with ID={}", threadId);
+            logger.info("Error closing thread with ID={} because it does not exist", threadId);
             return null;
         }
         thread.setClosed(true);
         logger.info("Closed thread with ID={}", threadId);
+        return thread.getId();
+    }
+
+    @Override
+    public Long open(long threadId) {
+        final Thread thread = idToThread.get(threadId);
+        if (thread == null) {
+            logger.info("Error opening thread with ID={} because it does not exist!", threadId);
+            return null;
+        }
+        thread.setClosed(false);
+        logger.info("Opened thread with ID={}", threadId);
         return thread.getId();
     }
 
@@ -131,6 +143,36 @@ public class ThreadDAOImpl implements ThreadDAO {
         new PostDAOImpl().markDeleted(threadId);
 
         logger.info("Removing thread with ID={}", threadId);
+        return thread.getId();
+    }
+
+    @Override
+    public Long subscribe(long threadId, String userEmail) {
+        final Thread thread = idToThread.get(threadId);
+        if (thread == null) {
+            logger.info("Error subscribing user because thread with ID={} does not exist!", threadId);
+            return null;
+        }
+        final Long userId = new UserDAOImpl().subscribe(threadId, userEmail);
+        if (userId == null) {
+            logger.info("Error subscribing user because user with email={} does not exist!", userEmail);
+            return null;
+        }
+        return thread.getId();
+    }
+
+    @Override
+    public Long unsubscribe(long threadId, String userEmail) {
+        final Thread thread = idToThread.get(threadId);
+        if (thread == null) {
+            logger.info("Error unsubscribing user because thread with ID={} does not exist!", threadId);
+            return null;
+        }
+        final Long userId = new UserDAOImpl().unsubscribe(threadId, userEmail);
+        if (userId == null) {
+            logger.info("Error unsubscribing user because user with email={} does not exist!", userEmail);
+            return null;
+        }
         return thread.getId();
     }
 }

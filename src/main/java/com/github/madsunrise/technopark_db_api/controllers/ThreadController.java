@@ -89,6 +89,20 @@ public class ThreadController {
         return new CustomResponse<>(Codes.OK, result);
     }
 
+    @RequestMapping(path = "/db/api/thread/open", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse open(@RequestBody ThreadId request) {
+        final Long id = threadDAO.open(request.getThreadId());
+
+        if (id == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "Thread not found");
+        }
+        final ThreadId result = new ThreadId(id);
+        return new CustomResponse<>(Codes.OK, result);
+    }
+
+
+
     @RequestMapping(path = "/db/api/thread/remove", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse remove(@RequestBody ThreadId request) {
@@ -97,6 +111,36 @@ public class ThreadController {
             return new CustomResponse<>(Codes.NOT_FOUND, "Thread not found");
         }
         final ThreadId result = new ThreadId(id);
+        return new CustomResponse<>(Codes.OK, result);
+    }
+
+
+    @RequestMapping(path = "/db/api/thread/subscribe", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse subscribe(@RequestBody SubscribeBody request) {
+        if (StringUtils.isEmpty(request.getUserEmail())) {
+            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+        }
+        final Long id = threadDAO.subscribe(request.getThreadId(), request.getUserEmail());
+        if (id == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "Thread or user not found");
+        }
+        final SubscribeBody result = new SubscribeBody(id, request.getUserEmail());
+        return new CustomResponse<>(Codes.OK, result);
+    }
+
+
+    @RequestMapping(path = "/db/api/thread/unsubscribe", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse unsubscribe(@RequestBody SubscribeBody request) {
+        if (StringUtils.isEmpty(request.getUserEmail())) {
+            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+        }
+        final Long id = threadDAO.unsubscribe(request.getThreadId(), request.getUserEmail());
+        if (id == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "Thread or user not found");
+        }
+        final SubscribeBody result = new SubscribeBody(id, request.getUserEmail());
         return new CustomResponse<>(Codes.OK, result);
     }
 
@@ -128,6 +172,36 @@ public class ThreadController {
                 return threadId;
             }
         }
+
+
+    private static class SubscribeBody {
+        @JsonProperty("thread")
+        private long threadId;
+        @JsonProperty("user")
+        private String userEmail;
+
+        @SuppressWarnings("unused")
+        SubscribeBody() {
+        }
+
+        public SubscribeBody(long threadId) {
+            this.threadId = threadId;
+        }
+
+        public SubscribeBody(long threadId, String userEmail) {
+            this.threadId = threadId;
+            this.userEmail = userEmail;
+        }
+
+        public long getThreadId() {
+            return threadId;
+        }
+
+        public String getUserEmail() {
+            return userEmail;
+        }
+    }
+
 
 
     private static class CreateRequest {

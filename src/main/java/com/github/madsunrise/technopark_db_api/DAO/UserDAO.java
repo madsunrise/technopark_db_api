@@ -19,4 +19,6 @@ public interface UserDAO {
     UserDetailsExtended updateProfile (String email, String name, String about);
     void clear();
     long getAmount();
+    Long subscribe (long threadId, String email);
+    Long unsubscribe (long threadId, String email);
 }

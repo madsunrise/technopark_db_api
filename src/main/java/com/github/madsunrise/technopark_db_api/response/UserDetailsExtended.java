@@ -15,7 +15,7 @@ public class UserDetailsExtended extends UserDetails {
     @JsonProperty("following")
     private List<String> following = new ArrayList<>();
     @JsonProperty("subscriptions")
-    private List<Integer> subscriptions = new ArrayList<>();
+    private List<Long> subscriptions = new ArrayList<>();
 
     public UserDetailsExtended() {
     }
@@ -26,9 +26,9 @@ public class UserDetailsExtended extends UserDetails {
 
     public UserDetailsExtended(User user) {
         super(user);
-        this.followers = user.getFollowers();
-        this.following = user.getFollowing();
-        this.subscriptions = user.getSubscriptions();
+        this.followers.addAll(user.getFollowers());
+        this.following.addAll(user.getFollowing());
+        this.subscriptions.addAll(user.getSubscriptions());
     }
 
     public List<String> getFollowers() {
@@ -39,7 +39,7 @@ public class UserDetailsExtended extends UserDetails {
         return following;
     }
 
-    public List<Integer> getSubscriptions() {
+    public List<Long> getSubscriptions() {
         return subscriptions;
     }
 
@@ -51,7 +51,7 @@ public class UserDetailsExtended extends UserDetails {
         this.following = following;
     }
 
-    public void setSubscriptions(List<Integer> subscriptions) {
+    public void setSubscriptions(List<Long> subscriptions) {
         this.subscriptions = subscriptions;
     }
 }
