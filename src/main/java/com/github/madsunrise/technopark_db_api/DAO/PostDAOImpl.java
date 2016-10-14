@@ -17,6 +17,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by ivan on 12.10.16.
  */
+
+
+// При добавлении поста инкрементим счетчик в Thread!
 public class PostDAOImpl implements PostDAO {
     private static final Map<Long, Post> idToPost = new ConcurrentHashMap<>();
     private static final Logger logger = LoggerFactory.getLogger(ThreadDAOImpl.class.getName());
@@ -206,6 +209,9 @@ public class PostDAOImpl implements PostDAO {
             return null;
         }
         idToPost.remove(postId);
+        final Thread thread = new ThreadDAOImpl().getById(post.getThreadId());
+        new ThreadDAOImpl().save(thread);
+        thread.removePost();
         logger.info("Successful removing post with ID={}", postId);
         return new PostId(post.getId());
     }

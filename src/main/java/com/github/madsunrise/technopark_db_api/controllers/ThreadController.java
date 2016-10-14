@@ -24,7 +24,6 @@ public class ThreadController {
 
 
     @RequestMapping(path = "/db/api/thread/create", method = RequestMethod.POST)
-    @ResponseBody
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse create(@RequestBody CreateRequest request) {
         if (StringUtils.isEmpty(request.title) ||
@@ -46,7 +45,6 @@ public class ThreadController {
 
 
     @RequestMapping(path = "/db/api/thread/details", method = RequestMethod.GET)
-    @ResponseBody
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse details(@RequestParam("thread") int threadId,
                                   @RequestParam(value = "related", required = false) List<String> array) {
@@ -79,8 +77,36 @@ public class ThreadController {
     }
 
 
+    @RequestMapping(path = "/db/api/thread/close", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse close(@RequestBody ThreadId request) {
+        final Long id = threadDAO.close(request.getThreadId());
+
+        if (id == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "Thread not found");
+        }
+        final ThreadId result = new ThreadId(id);
+        return new CustomResponse<>(Codes.OK, result);
+    }
+    
 
 
+        private static class ThreadId {
+            @JsonProperty("thread")
+            private long threadId;
+
+            @SuppressWarnings("unused")
+            ThreadId() {
+            }
+
+            public ThreadId(long threadId) {
+                this.threadId = threadId;
+            }
+
+            public long getThreadId() {
+                return threadId;
+            }
+        }
 
 
     private static class CreateRequest {

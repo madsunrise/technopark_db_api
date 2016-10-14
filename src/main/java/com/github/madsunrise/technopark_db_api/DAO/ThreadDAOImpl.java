@@ -56,8 +56,15 @@ public class ThreadDAOImpl implements ThreadDAO {
     }
 
     @Override
-    public String close(int threadId) {
-        return null;
+    public Long close(long threadId) {
+        final Thread thread = idToThread.get(threadId);
+        if (thread == null) {
+            logger.info("Error closing thread with ID={}", threadId);
+            return null;
+        }
+        thread.setClosed(true);
+        logger.info("Closed thread with ID={}", threadId);
+        return thread.getId();
     }
 
     @Override
