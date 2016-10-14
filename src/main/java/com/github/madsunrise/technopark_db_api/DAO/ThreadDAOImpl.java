@@ -1,6 +1,7 @@
 package com.github.madsunrise.technopark_db_api.DAO;
 
 import com.github.madsunrise.technopark_db_api.model.Forum;
+import com.github.madsunrise.technopark_db_api.model.Post;
 import com.github.madsunrise.technopark_db_api.model.Thread;
 import com.github.madsunrise.technopark_db_api.model.User;
 import com.github.madsunrise.technopark_db_api.response.*;
@@ -116,5 +117,20 @@ public class ThreadDAOImpl implements ThreadDAO {
         final long id = thread.getId();
         idToThread.put(id, thread);
         return id;
+    }
+
+    @Override
+    public Long remove(long threadId) {
+        final Thread thread = idToThread.get(threadId);
+        if (thread == null) {
+            logger.info("Error removing thread with ID={} because it does not exist!", threadId);
+            return null;
+        }
+        thread.setDeleted(true);
+
+        new PostDAOImpl().markDeleted(threadId);
+
+        logger.info("Removing thread with ID={}", threadId);
+        return thread.getId();
     }
 }

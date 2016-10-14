@@ -7,12 +7,10 @@ import com.github.madsunrise.technopark_db_api.DAO.PostDAOImpl;
 import com.github.madsunrise.technopark_db_api.response.CustomResponse;
 import com.github.madsunrise.technopark_db_api.response.PostDetails;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
-import com.github.madsunrise.technopark_db_api.response.PostId;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -80,10 +78,10 @@ public class PostController {
 
         final List<PostDetailsExtended> result;
         if (forumShortName != null) {
-            result = postDAO.getPosts(forumShortName, since, limit, order);
+            result = postDAO.getPostsDetails(forumShortName, since, limit, order);
         }
         else {
-            result = postDAO.getPosts(threadId, since, limit, order);
+            result = postDAO.getPostsDetails(threadId, since, limit, order);
         }
 
         if (result == null || result.isEmpty()) {
@@ -96,11 +94,12 @@ public class PostController {
 
     @RequestMapping(path = "/db/api/post/remove", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse remove(@RequestBody MyLong postId) {
-        final PostId result = postDAO.remove(postId.getPostId());
-        if (result == null) {
+    public CustomResponse remove(@RequestBody PostId postId) {
+        final Long id = postDAO.remove(postId.getPostId());
+        if (id == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Post not found");
         }
+        final PostId result = new PostId(id);
         return new CustomResponse<>(Codes.OK, result);
     }
 
@@ -108,15 +107,15 @@ public class PostController {
 
 
 
-    private static class MyLong {
+    private static class PostId {
         @JsonProperty("post")
         private long postId;
 
         @SuppressWarnings("unused")
-        MyLong() {
+        PostId() {
         }
 
-        public MyLong(long postId) {
+        public PostId(long postId) {
             this.postId = postId;
         }
 

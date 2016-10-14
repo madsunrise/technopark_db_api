@@ -5,7 +5,6 @@ import com.github.madsunrise.technopark_db_api.model.Post;
 import com.github.madsunrise.technopark_db_api.model.Thread;
 import com.github.madsunrise.technopark_db_api.model.User;
 import com.github.madsunrise.technopark_db_api.response.*;
-import javafx.geometry.Pos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +31,6 @@ public class PostDAOImpl implements PostDAO {
             logger.info("Post with ID={} not found!", id);
             return null;
         }
-        logger.info("Post with ID={} successful found", id);
         return post;
     }
 
@@ -123,8 +121,8 @@ public class PostDAOImpl implements PostDAO {
 
 
     @Override
-    public List<PostDetailsExtended> getPosts(String forumShortName,
-                                              LocalDateTime since, Integer limit, String order) {
+    public List<PostDetailsExtended> getPostsDetails(String forumShortName,
+                                                     LocalDateTime since, Integer limit, String order) {
         List<PostDetailsExtended> allPosts = new ArrayList<>();
         for (Map.Entry<Long, Post> entry: idToPost.entrySet()) {
             final Post post = entry.getValue();
@@ -171,14 +169,14 @@ public class PostDAOImpl implements PostDAO {
     }
 
     @Override
-    public List<PostDetailsExtended> getPosts(long threadId,
-                                              LocalDateTime since, Integer limit, String order) {
+    public List<PostDetailsExtended> getPostsDetails(long threadId,
+                                                     LocalDateTime since, Integer limit, String order) {
         final Thread thread = new ThreadDAOImpl().getById(threadId);
         if (thread == null) {
             logger.info("Error getting list posts because thread with ID={} does not exists", threadId);
             return null;
         }
-        return this.getPosts(thread.getForum(), since, limit, order);
+        return this.getPostsDetails(thread.getForum(), since, limit, order);
     }
 
 
@@ -200,19 +198,28 @@ public class PostDAOImpl implements PostDAO {
     }
 
 
+    @Override
+    public void markDeleted(long threadId) {
+        for (Map.Entry<Long, Post> entry: idToPost.entrySet()) {
+            final Post post = entry.getValue();
+            if (post.getThreadId() == threadId) {
+                post.setDeleted(true);
+            }
+        }
+    }
+
 
     @Override
-    public PostId remove(long postId) {
+    public Long remove(long postId) {
         final Post post = idToPost.get(postId);
         if (post == null) {
             logger.info("Error removing post with ID={} because it does not exist!", postId);
             return null;
         }
-        idToPost.remove(postId);
+        post.setDeleted(true);
         final Thread thread = new ThreadDAOImpl().getById(post.getThreadId());
-        new ThreadDAOImpl().save(thread);
         thread.removePost();
-        logger.info("Successful removing post with ID={}", postId);
-        return new PostId(post.getId());
+        logger.info("Removing post with ID={}", postId);
+        return post.getId();
     }
 }

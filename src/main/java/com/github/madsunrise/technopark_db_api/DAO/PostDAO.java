@@ -3,9 +3,7 @@ package com.github.madsunrise.technopark_db_api.DAO;
 import com.github.madsunrise.technopark_db_api.model.Post;
 import com.github.madsunrise.technopark_db_api.response.PostDetails;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
-import com.github.madsunrise.technopark_db_api.response.PostId;
 import javafx.geometry.Pos;
-import org.assertj.core.internal.cglib.core.Local;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,9 +19,10 @@ public interface PostDAO {
     PostDetailsExtended getDetails(long id, List<String> related);
     void clear();
     long getAmount();
-    List<PostDetailsExtended> getPosts (String forumShortName,
-                                        LocalDateTime since, Integer limit, String order);
-    List<PostDetailsExtended> getPosts (long threadId,
-                                        LocalDateTime since, Integer limit, String order);
-    PostId remove (long postId);
+    List<PostDetailsExtended> getPostsDetails(String forumShortName,
+                                              LocalDateTime since, Integer limit, String order);
+    List<PostDetailsExtended> getPostsDetails(long threadId,
+                                              LocalDateTime since, Integer limit, String order);
+    Long remove (long postId);
+    void markDeleted(long threadId);
 }

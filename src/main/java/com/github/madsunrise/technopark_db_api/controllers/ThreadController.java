@@ -88,10 +88,31 @@ public class ThreadController {
         final ThreadId result = new ThreadId(id);
         return new CustomResponse<>(Codes.OK, result);
     }
-    
+
+    @RequestMapping(path = "/db/api/thread/remove", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse remove(@RequestBody ThreadId request) {
+        final Long id = threadDAO.remove(request.getThreadId());
+        if (id == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "Thread not found");
+        }
+        final ThreadId result = new ThreadId(id);
+        return new CustomResponse<>(Codes.OK, result);
+    }
 
 
-        private static class ThreadId {
+
+
+
+
+
+
+
+
+
+
+
+    private static class ThreadId {
             @JsonProperty("thread")
             private long threadId;
 

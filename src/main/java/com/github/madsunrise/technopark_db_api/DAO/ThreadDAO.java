@@ -19,4 +19,5 @@ public interface ThreadDAO {
     void clear();
     long getAmount();
     long save (Thread thread);
+    Long remove (long threadId);
 }
