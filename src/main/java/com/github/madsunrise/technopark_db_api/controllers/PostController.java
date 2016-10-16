@@ -42,7 +42,6 @@ public class PostController {
     }
 
 
-
     @RequestMapping(path = "/db/api/post/details", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse details(@RequestParam("post") int postId,
@@ -55,12 +54,10 @@ public class PostController {
     }
 
 
-
-
     @RequestMapping(path = "/db/api/post/list/", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse list(@RequestParam(value = "forum", required = false) String forumShortName,
-                               @RequestParam(value = "thread",required = false) Long threadId,
+                               @RequestParam(value = "thread", required = false) Long threadId,
                                @RequestParam(value = "since", required = false) String sinceStr,
                                @RequestParam(value = "limit", required = false) Integer limit,
                                @RequestParam(value = "order", required = false, defaultValue = "desc") String order) {
@@ -79,8 +76,7 @@ public class PostController {
         final List<PostDetailsExtended> result;
         if (forumShortName != null) {
             result = postDAO.getPostsByForum(forumShortName, since, limit, order);
-        }
-        else {
+        } else {
             result = postDAO.getPostsByThread(threadId, since, limit, order);
         }
 
@@ -125,8 +121,19 @@ public class PostController {
         return new CustomResponse<>(Codes.OK, result);
     }
 
+    @RequestMapping(path = "/db/api/post/update", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse update(@RequestBody UpdateRequest request) {
+        if (StringUtils.isEmpty(StringUtils.isEmpty(request.message))) {
+            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+        }
 
-
+        final PostDetailsExtended result = postDAO.update(request.postId, request.message);
+        if (result == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "Post not found");
+        }
+        return new CustomResponse<>(Codes.OK, result);
+    }
 
 
     private static class PostId {
@@ -156,21 +163,23 @@ public class PostController {
         @SuppressWarnings("unused")
         VoteRequest() {
         }
+
         public VoteRequest(long postId, int vote) {
             this.postId = postId;
             this.vote = vote;
         }
+
         public long getPostId() {
             return postId;
         }
+
         public int getVote() {
             return vote;
         }
     }
 
 
-
-        private static class CreateRequest {
+    private static class CreateRequest {
         @JsonProperty("date")
         private String date;
         @JsonProperty("message")
@@ -212,6 +221,30 @@ public class PostController {
             this.edited = edited;
             this.spam = spam;
             this.deleted = deleted;
+        }
+    }
+
+    private static class UpdateRequest {
+        @JsonProperty("message")
+        private String message;
+        @JsonProperty("post")
+        private long postId;
+
+        @SuppressWarnings("unused")
+        UpdateRequest() {
+        }
+
+        public UpdateRequest(String message, long postId) {
+            this.message = message;
+            this.postId = postId;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public long getPostId() {
+            return postId;
         }
     }
 }

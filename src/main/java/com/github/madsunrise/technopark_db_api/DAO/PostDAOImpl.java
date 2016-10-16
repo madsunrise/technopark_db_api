@@ -381,4 +381,15 @@ public class PostDAOImpl implements PostDAO {
         return new PostDetailsExtended(post);
 
     }
+
+    @Override
+    public PostDetailsExtended update(long postId, String message) {
+        final Post post = getById(postId);
+        if (post == null) {
+            logger.info("Error post updating because post with ID={} does not exist!", postId);
+            return null;
+        }
+        post.setMessage(message);
+        return new PostDetailsExtended(post);
+    }
 }

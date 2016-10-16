@@ -34,4 +34,5 @@ public interface PostDAO {
     void markDeleted(long threadId);
     void markRestored (long threadId);
     PostDetailsExtended vote(long postId, int vote);
+    PostDetailsExtended update (long postId, String message);
 }

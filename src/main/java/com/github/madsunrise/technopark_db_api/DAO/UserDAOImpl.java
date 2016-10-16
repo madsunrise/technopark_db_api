@@ -284,10 +284,10 @@ public class UserDAOImpl implements UserDAO {
         List<UserDetailsExtended> result = new ArrayList<>();
 
         for (PostDetailsExtended post: posts) {
-            final String email = (String) post.getUser();
-            final User user = getByEmail(email);
-            final UserDetailsExtended userDetails = new UserDetailsExtended(user);
-            result.add(userDetails);
+                final String email = (String) post.getUser();
+                final User user = getByEmail(email);
+                final UserDetailsExtended userDetails = new UserDetailsExtended(user);
+                result.add(userDetails);
         }
 
         // отсекаем ненужных
@@ -322,6 +322,15 @@ public class UserDAOImpl implements UserDAO {
     static class NameComparator implements Comparator<UserDetailsExtended> {
         @Override
         public int compare(UserDetailsExtended u1, UserDetailsExtended u2) {
+            if (u1.getName() == null && u2.getName() == null) {
+                return 0;
+            }
+            if (u1.getName() == null) {
+                return 1;
+            }
+            if (u2.getName() == null) {
+                return -1;
+            }
             return u1.getName().compareTo(u2.getName());
         }
     }
