@@ -283,12 +283,17 @@ public class UserDAOImpl implements UserDAO {
         }
 
         List<UserDetailsExtended> result = new ArrayList<>();
+        // Чтобы пользователи не дублировались
+        final Set<String> userEmails = new HashSet<>();
 
         for (PostDetailsExtended post: posts) {
                 final String email = (String) post.getUser();
-                final User user = getByEmail(email);
-                final UserDetailsExtended userDetails = new UserDetailsExtended(user);
-                result.add(userDetails);
+                if (!userEmails.contains(email)) {
+                    final User user = getByEmail(email);
+                    final UserDetailsExtended userDetails = new UserDetailsExtended(user);
+                    result.add(userDetails);
+                }
+                userEmails.add(email);
         }
 
         // отсекаем ненужных
@@ -327,10 +332,10 @@ public class UserDAOImpl implements UserDAO {
                 return 0;
             }
             if (u1.getName() == null) {
-                return 1;
+                return -1;
             }
             if (u2.getName() == null) {
-                return -1;
+                return 1;
             }
             return u1.getName().compareTo(u2.getName());
         }
