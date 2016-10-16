@@ -4,6 +4,7 @@ import com.github.madsunrise.technopark_db_api.model.Forum;
 import com.github.madsunrise.technopark_db_api.model.User;
 import com.github.madsunrise.technopark_db_api.response.ForumDetails;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
+import com.github.madsunrise.technopark_db_api.response.ThreadDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.UserDetailsExtended;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,11 @@ public class ForumDAOImpl implements ForumDAO {
     }
 
     @Override
+    public ForumDetails getDetails(String shortName) {
+        return  this.getDetails(shortName, null);
+    }
+
+    @Override
     public ForumDetails getDetails(String shortName, String related) {
         final Forum forum = getByShortName(shortName);
         if (forum == null) {
@@ -79,9 +85,30 @@ public class ForumDAOImpl implements ForumDAO {
                                               Integer limit, String order, List<String> related) {
         final Forum forum = getByShortName(shortName);
         if (forum == null) {
-            logger.info("Error getting forum posts because forum \"{}\": does not exist!", shortName);
+            logger.info("Error getting forum's posts because forum \"{}\": does not exist!", shortName);
             return null;
         }
         return new PostDAOImpl().getPostsByForum(shortName, since, limit, order, related);
+    }
+
+    @Override
+    public List<ThreadDetailsExtended> getThreads(String shortName, LocalDateTime since,
+                                                  Integer limit, String order, List<String> related) {
+        final Forum forum = getByShortName(shortName);
+        if (forum == null) {
+            logger.info("Error getting forum's threads because forum \"{}\": does not exist!", shortName);
+            return null;
+        }
+        return new ThreadDAOImpl().getThreads(shortName, since, limit, order, related);
+    }
+
+    @Override
+    public List<UserDetailsExtended> getUsers(String shortName, Long sinceId, Integer limit, String order) {
+        final Forum forum = getByShortName(shortName);
+        if (forum == null) {
+            logger.info("Error getting forum's users because forum \"{}\": does not exist!", shortName);
+            return null;
+        }
+        return new UserDAOImpl().getUsersByForum(shortName, sinceId, limit, order);
     }
 }

@@ -29,4 +29,6 @@ public interface ThreadDAO {
     List<PostDetailsExtended> getPosts (long threadId, LocalDateTime since, Integer limit, String order, String sort);
     ThreadDetailsExtended vote(long threadId, int vote);
     ThreadDetailsExtended update (long threadId, String message, String slug);
+    List <ThreadDetailsExtended> getThreads (String forumShortName, LocalDateTime since,
+                                             Integer limit, String order, List<String> related);
 }

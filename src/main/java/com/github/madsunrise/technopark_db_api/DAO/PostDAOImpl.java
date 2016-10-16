@@ -124,11 +124,6 @@ public class PostDAOImpl implements PostDAO {
     @Override
     public List<PostDetailsExtended> getPostsByForum(String forumShortName, LocalDateTime since,
                                                      Integer limit, String order, List<String> related) {
-        final Forum forum = new ForumDAOImpl().getByShortName(forumShortName);
-        if (forum == null) {
-            logger.info("Error getting list posts because forum {} does not exists", forumShortName);
-            return null;
-        }
         List<PostDetailsExtended> allPosts = new ArrayList<>();
         for (Map.Entry<Long, Post> entry: idToPost.entrySet()) {
             final Post post = entry.getValue();
@@ -178,7 +173,7 @@ public class PostDAOImpl implements PostDAO {
         }
 
         // Sort по дате
-        if (order.equals("asc")) {
+        if (order != null && order.equals("asc")) {
             Collections.sort(allPosts, new DateComparator());
         }
         else {
@@ -233,7 +228,7 @@ public class PostDAOImpl implements PostDAO {
         }
 
         // Sort по дате
-        if (order.equals("asc")) {
+        if (order != null && order.equals("asc")) {
             Collections.sort(allPosts, new DateComparator());
         }
         else {
@@ -286,7 +281,7 @@ public class PostDAOImpl implements PostDAO {
         }
 
         // Sort по дате
-        if (order.equals("asc")) {
+        if (order != null && order.equals("asc")) {
             Collections.sort(allPosts, new DateComparator());
         }
         else {

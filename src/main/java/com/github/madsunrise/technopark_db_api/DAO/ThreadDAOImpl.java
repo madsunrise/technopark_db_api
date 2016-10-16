@@ -9,8 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -232,5 +232,76 @@ public class ThreadDAOImpl implements ThreadDAO {
         thread.setMessage(message);
         thread.setSlug(slug);
         return new ThreadDetailsExtended(thread);
+    }
+
+    @Override
+    public List<ThreadDetailsExtended> getThreads(String forumShortName, LocalDateTime since, Integer limit, String order, List<String> related) {
+        List<ThreadDetailsExtended> threads = new ArrayList<>();
+        for (Map.Entry<Long, Thread> entry: idToThread.entrySet()) {
+            final Thread thread = entry.getValue();
+
+            if (thread.getForum().equals(forumShortName)) {
+                final ThreadDetailsExtended threadDetails = new ThreadDetailsExtended(thread);
+
+                if (related != null && related.contains("forum")) {
+                    final ForumDetails forumDetails = new ForumDAOImpl().getDetails(forumShortName);
+                    threadDetails.setForum(forumDetails);
+                }
+                else {
+                    threadDetails.setForum(forumShortName);
+                }
+
+                if (related != null && related.contains("user")) {
+                    final UserDetailsExtended userDetails = new UserDAOImpl().getDetails(thread.getUser());
+                    threadDetails.setUser(userDetails);
+                }
+                else {
+                    threadDetails.setUser(thread.getUser());
+                }
+
+                threads.add(threadDetails);
+            }
+        }
+
+        // отсекаем старые посты
+        if (since != null) {
+            final List<ThreadDetailsExtended> temp = new ArrayList<>();
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+            for (ThreadDetailsExtended threadDetails: threads) {
+                final String dateStr = threadDetails.getDate();
+                final LocalDateTime date = LocalDateTime.parse(dateStr, formatter);
+                if (date.compareTo(since) >= 0) {
+                    temp.add(threadDetails);
+                }
+            }
+            threads = temp;
+        }
+
+        // Sort по дате
+        if (order.equals("asc")) {
+            Collections.sort(threads, new DateComparator());
+        }
+        else {
+            Collections.sort(threads, Collections.reverseOrder(new DateComparator()));
+        }
+
+
+        if (limit == null || limit > threads.size()) {
+            limit = threads.size();
+        }
+
+        logger.info("Getting list threads success");
+        return threads.subList(0, limit);
+    }
+
+    static class DateComparator implements Comparator<ThreadDetailsExtended> {
+        @Override
+        public int compare(ThreadDetailsExtended t1, ThreadDetailsExtended t2) {
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            final LocalDateTime d1 = LocalDateTime.parse(t1.getDate(), formatter);
+            final LocalDateTime d2 = LocalDateTime.parse(t2.getDate(), formatter);
+            return d1.compareTo(d2);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.github.madsunrise.technopark_db_api.DAO;
 
+import com.github.madsunrise.technopark_db_api.model.Post;
 import com.github.madsunrise.technopark_db_api.model.User;
 import com.github.madsunrise.technopark_db_api.response.PostDetails;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
@@ -271,5 +272,57 @@ public class UserDAOImpl implements UserDAO {
             return null;
         }
         return new PostDAOImpl().getPostsByUser(email, since, limit, order);
+    }
+
+    @Override
+    public List<UserDetailsExtended> getUsersByForum(String forumShortName, Long sinceId, Integer limit, String order) {
+        List<PostDetailsExtended> posts = new PostDAOImpl().getPostsByForum(forumShortName, null, null, null);
+        if (posts.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<UserDetailsExtended> result = new ArrayList<>();
+
+        for (PostDetailsExtended post: posts) {
+            final String email = (String) post.getUser();
+            final User user = getByEmail(email);
+            final UserDetailsExtended userDetails = new UserDetailsExtended(user);
+            result.add(userDetails);
+        }
+
+        // отсекаем ненужных
+        if (sinceId != null) {
+            final List<UserDetailsExtended> temp = new ArrayList<>();
+
+            for (UserDetailsExtended userDetails: result) {
+                if (userDetails.getId() >= sinceId) {
+                    temp.add(userDetails);
+                }
+            }
+            result = temp;
+        }
+
+        // Sort по имени
+        if (order != null && order.equals("asc")) {
+            Collections.sort(result, new NameComparator());
+        }
+        else {
+            Collections.sort(result, Collections.reverseOrder(new NameComparator()));
+        }
+
+
+        if (limit == null || limit > result.size()) {
+            limit = result.size();
+        }
+
+        logger.info("Getting forum's users success");
+        return result.subList(0, limit);
+    }
+
+    static class NameComparator implements Comparator<UserDetailsExtended> {
+        @Override
+        public int compare(UserDetailsExtended u1, UserDetailsExtended u2) {
+            return u1.getName().compareTo(u2.getName());
+        }
     }
 }

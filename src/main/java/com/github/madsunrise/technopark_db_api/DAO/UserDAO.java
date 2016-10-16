@@ -27,4 +27,5 @@ public interface UserDAO {
     Long subscribe (long threadId, String email);
     Long unsubscribe (long threadId, String email);
     List<PostDetailsExtended> getPosts(String email, LocalDateTime since, Integer limit, String order);
+    List<UserDetailsExtended> getUsersByForum (String forumShortName, Long sinceId, Integer limit, String order);
 }
