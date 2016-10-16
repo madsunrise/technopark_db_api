@@ -191,6 +191,8 @@ public class ThreadDAOImpl implements ThreadDAO {
         return thread.getId();
     }
 
+
+
     @Override
     public List<PostDetailsExtended> getPosts(long threadId, LocalDateTime since, Integer limit, String order, String sort) {
         final Thread thread = getById(threadId);
@@ -198,12 +200,33 @@ public class ThreadDAOImpl implements ThreadDAO {
             logger.info("Error getting post list because thread with ID={} does not exist!", threadId);
             return null;
         }
-        List<PostDetailsExtended> posts = new PostDAOImpl().getPostsByThread(threadId, since, limit, order);
+        final List<PostDetailsExtended> posts = new PostDAOImpl().getPostsByThread(threadId, since, null, order);
 
 
-        // Add sorting here
+        // Add sort here
+        if (sort.equals("flat")) {
+            if (order.equals("asc")) {
+                Collections.sort(posts, new DatePostsComparator());
+            }
+            else {
+                Collections.sort(posts, Collections.reverseOrder(new DatePostsComparator()));
+            }
+        }
+
+        if (sort.equals("tree") || sort.equals("parent_tree")) {
+            if (order.equals("asc")) {
+                Collections.sort(posts, new PathComparatorAsc());
+            }
+            else {
+                Collections.sort(posts, new PathComparatorDesc());
+            }
+        }
+
+
         return posts;
     }
+
+
 
     @Override
     public ThreadDetailsExtended vote(long threadId, int vote) {
@@ -301,6 +324,48 @@ public class ThreadDAOImpl implements ThreadDAO {
             final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             final LocalDateTime d1 = LocalDateTime.parse(t1.getDate(), formatter);
             final LocalDateTime d2 = LocalDateTime.parse(t2.getDate(), formatter);
+            return d1.compareTo(d2);
+        }
+    }
+
+    static class PathComparatorAsc implements Comparator<PostDetailsExtended> {
+        @Override
+        public int compare(PostDetailsExtended p1, PostDetailsExtended p2) {
+            final String path1 = p1.getPath();
+            final String path2 = p2.getPath();
+            return path1.compareTo(path2);
+        }
+    }
+
+    static class PathComparatorDesc implements Comparator<PostDetailsExtended> {
+        @Override
+        public int compare(PostDetailsExtended p1, PostDetailsExtended p2) {
+            final String path1 = p1.getPath();
+            final String path2 = p2.getPath();
+            if (path1.contains(".") || path2.contains(".")) {
+                final String[] array1 = path1.split("\\.");
+                final String[] array2 = path2.split("\\.");
+                if (array1[0].equals(array2[0])) {
+                    return path1.compareTo(path2);
+                } else {
+                    return path2.compareTo(path1);
+                }
+            }
+
+            return path2.compareTo(path1);
+        }
+    }
+
+
+
+
+
+    static class DatePostsComparator implements Comparator<PostDetailsExtended> {
+        @Override
+        public int compare(PostDetailsExtended p1, PostDetailsExtended p2) {
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            final LocalDateTime d1 = LocalDateTime.parse(p1.getDate(), formatter);
+            final LocalDateTime d2 = LocalDateTime.parse(p2.getDate(), formatter);
             return d1.compareTo(d2);
         }
     }
