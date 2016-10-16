@@ -84,7 +84,7 @@ public class User {
         return followers;
     }
 
-    public Set<String> getFollowing() {
+    public Set<String> getFollowees() {
         return following;
     }
 

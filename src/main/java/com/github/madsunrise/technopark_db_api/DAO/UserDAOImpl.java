@@ -1,14 +1,11 @@
 package com.github.madsunrise.technopark_db_api.DAO;
 
-import com.github.madsunrise.technopark_db_api.model.Post;
 import com.github.madsunrise.technopark_db_api.model.User;
-import com.github.madsunrise.technopark_db_api.response.PostDetails;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.UserDetails;
 import com.github.madsunrise.technopark_db_api.response.UserDetailsExtended;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.annotation.Order;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -101,107 +98,111 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Override
-    public UserDetailsExtended getFollowers(String email, Integer limit, String order, Integer sinceId) {
+    public List<UserDetailsExtended> getFollowers(String email, Integer limit, String order, Integer sinceId) {
         final User user = getByEmail(email);
         if (user == null) {
             logger.info("Error getting followers - user does not exist!");
             return null;
         }
 
-        List<String> followers = new ArrayList<>();
-        followers.addAll(user.getFollowers());
-        if (followers.isEmpty()) {
-            new UserDetailsExtended(user);
-        }
-
-        // разрулим неопределенности
-        if (order == null) {
+        final Set<String> followersEmails = new HashSet<>();
+        followersEmails.addAll(user.getFollowers());
+        if (followersEmails.isEmpty()) {
             return null;
         }
 
+        
+        if (order == null) {
+            order = "desc";
+        }
+        
+        List<UserDetailsExtended> followers = new ArrayList<>();
+        for (String followerEmail: followersEmails) {
+            final User follower = getByEmail(followerEmail);
+            followers.add(new UserDetailsExtended(follower));
+        }
+        
+
         if (sinceId != null) {
-            final List<String> cutted = new ArrayList<>();
-            for (String followerEmail : followers) {
-                final User follower = emailToUser.get(followerEmail);
+            final List<UserDetailsExtended> cutted = new ArrayList<>();
+            for (UserDetailsExtended follower: followers) {
                 if (follower.getId() >= sinceId) {
-                    cutted.add(followerEmail);
+                    cutted.add(follower);
                 }
             }
             if (cutted.isEmpty()) {
-                new UserDetailsExtended(user);
+                return null;
             }
             followers = cutted;
         }
-
-        if (limit == null || limit > followers.size()) {
-            limit = followers.size();
-        }
-
-        // c учетом лимита
-        followers = followers.subList(0, limit);
+        
 
         if (order.equals("asc")) {
-            Collections.sort(followers);
+            Collections.sort(followers, new NameComparator());
         } else {
-            Collections.sort(followers, Collections.reverseOrder());
+            Collections.sort(followers, Collections.reverseOrder(new NameComparator()));
         }
 
-        final UserDetailsExtended result = new UserDetailsExtended(user);
-        result.setFollowers(followers);
+        if (limit == null || limit > followers.size()) {
+            limit = followersEmails.size();
+        }
+
         logger.info("Successful getting followers for \"{}\"", email);
-        return result;
+        // c учетом лимита
+        return followers.subList(0, limit);
     }
 
     @Override
-    public UserDetailsExtended getFollowing(String email, Integer limit, String order, Integer sinceId) {
+    public List<UserDetailsExtended> getFollowees(String email, Integer limit, String order, Integer sinceId) {
         final User user = getByEmail(email);
         if (user == null) {
-            logger.info("Error getting followers - user does not exist!");
+            logger.info("Error getting followees - user does not exist!");
             return null;
         }
 
-        List<String> following = new ArrayList<>();
-        following.addAll(user.getFollowing());
-        if (following.isEmpty()) {
-            new UserDetailsExtended(user);
-        }
+        final Set<String> followeesEmail = new HashSet<>();
+        followeesEmail.addAll(user.getFollowees());
+        
 
-        // разрулим неопределенности
+
         if (order == null) {
-            return null;
+            order = "desc";
         }
+
+        List<UserDetailsExtended> followees = new ArrayList<>();
+        for (String followeeEmail: followeesEmail) {
+            final User follower = getByEmail(followeeEmail);
+            followees.add(new UserDetailsExtended(follower));
+        }
+
 
         if (sinceId != null) {
-            final List<String> cutted = new ArrayList<>();
-            for (String followerEmail : following) {
-                final User follower = emailToUser.get(followerEmail);
-                if (follower.getId() >= sinceId) {
-                    cutted.add(followerEmail);
+            final List<UserDetailsExtended> cutted = new ArrayList<>();
+            for (UserDetailsExtended followee: followees) {
+                if (followee.getId() >= sinceId) {
+                    cutted.add(followee);
                 }
             }
             if (cutted.isEmpty()) {
-                new UserDetailsExtended(user);
+                return cutted;
             }
-            following = cutted;
+            followees = cutted;
         }
 
-        if (limit == null || limit > following.size()) {
-            limit = following.size();
-        }
-
-        // c учетом лимита
-        following = following.subList(0, limit);
 
         if (order.equals("asc")) {
-            Collections.sort(following);
+            Collections.sort(followees, new NameComparator());
         } else {
-            Collections.sort(following, Collections.reverseOrder());
+            Collections.sort(followees, Collections.reverseOrder(new NameComparator()));
         }
 
-        final UserDetailsExtended result = new UserDetailsExtended(user);
-        result.setFollowing(following);
-        logger.info("Successful getting following for \"{}\"", email);
-        return result;
+        if (limit == null || limit > followees.size()) {
+            limit = followeesEmail.size();
+        }
+
+        logger.info("Successful getting followees for \"{}\"", email);
+        // c учетом лимита
+        return followees.subList(0, limit);
     }
 
 

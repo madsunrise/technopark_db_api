@@ -108,9 +108,9 @@ public class UserController {
                                         @RequestParam(value = "limit", required = false) Integer limit,
                                         @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
                                         @RequestParam(value = "since_id", required = false) Integer sinceId){
-        final UserDetailsExtended result = userDAO.getFollowers(email, limit, order, sinceId);
+        final List<UserDetailsExtended> result = userDAO.getFollowers(email, limit, order, sinceId);
         if (result == null) {
-            return new CustomResponse<>(Codes.NOT_FOUND, "Not found");
+            return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
         }
         return new CustomResponse<>(Codes.OK, result);
     }
@@ -122,7 +122,7 @@ public class UserController {
                                         @RequestParam(value = "limit", required = false) Integer limit,
                                         @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
                                         @RequestParam(value = "since_id", required = false) Integer sinceId){
-        final UserDetailsExtended result = userDAO.getFollowing(email, limit, order, sinceId);
+        final List<UserDetailsExtended> result = userDAO.getFollowees(email, limit, order, sinceId);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
         }
