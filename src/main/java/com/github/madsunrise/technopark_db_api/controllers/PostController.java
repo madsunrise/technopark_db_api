@@ -59,7 +59,7 @@ public class PostController {
 
     @RequestMapping(path = "/db/api/post/list/", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse listByForum(@RequestParam(value = "forum", required = false) String forumShortName,
+    public CustomResponse list(@RequestParam(value = "forum", required = false) String forumShortName,
                                @RequestParam(value = "thread",required = false) Long threadId,
                                @RequestParam(value = "since", required = false) String sinceStr,
                                @RequestParam(value = "limit", required = false) Integer limit,
@@ -78,13 +78,13 @@ public class PostController {
 
         final List<PostDetailsExtended> result;
         if (forumShortName != null) {
-            result = postDAO.getPostsDetails(forumShortName, since, limit, order);
+            result = postDAO.getPostsByForum(forumShortName, since, limit, order);
         }
         else {
-            result = postDAO.getPostsDetails(threadId, since, limit, order);
+            result = postDAO.getPostsByThread(threadId, since, limit, order);
         }
 
-        if (result == null || result.isEmpty()) {
+        if (StringUtils.isEmpty(result)) {
             return new CustomResponse<>(Codes.NOT_FOUND, "No posts");
         }
 
@@ -114,6 +114,17 @@ public class PostController {
         return new CustomResponse<>(Codes.OK, result);
     }
 
+    @RequestMapping(path = "/db/api/post/vote", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse vote(@RequestBody VoteRequest request) {
+
+        final PostDetailsExtended result = postDAO.vote(request.getPostId(), request.getVote());
+        if (result == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
+        }
+        return new CustomResponse<>(Codes.OK, result);
+    }
+
 
 
 
@@ -134,6 +145,30 @@ public class PostController {
             return postId;
         }
     }
+
+
+    private static class VoteRequest {
+        @JsonProperty("post")
+        private long postId;
+        @JsonProperty("vote")
+        private int vote;
+
+        @SuppressWarnings("unused")
+        VoteRequest() {
+        }
+        public VoteRequest(long postId, int vote) {
+            this.postId = postId;
+            this.vote = vote;
+        }
+        public long getPostId() {
+            return postId;
+        }
+        public int getVote() {
+            return vote;
+        }
+    }
+
+
 
         private static class CreateRequest {
         @JsonProperty("date")

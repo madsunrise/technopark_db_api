@@ -1,6 +1,7 @@
 package com.github.madsunrise.technopark_db_api.DAO;
 
 import com.github.madsunrise.technopark_db_api.model.Thread;
+import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.ThreadDetails;
 import com.github.madsunrise.technopark_db_api.response.ThreadDetailsExtended;
 
@@ -23,4 +24,6 @@ public interface ThreadDAO {
     Long remove (long threadId);
     Long subscribe (long threadId, String userEmail);
     Long unsubscribe (long threadId, String userEmail);
+    List<PostDetailsExtended> getPosts (long threadId, LocalDateTime since, Integer limit, String order, String sort);
+    ThreadDetailsExtended vote(long threadId, int vote);
 }

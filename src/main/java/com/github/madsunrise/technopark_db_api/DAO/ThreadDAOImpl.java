@@ -175,4 +175,35 @@ public class ThreadDAOImpl implements ThreadDAO {
         }
         return thread.getId();
     }
+
+    @Override
+    public List<PostDetailsExtended> getPosts(long threadId, LocalDateTime since, Integer limit, String order, String sort) {
+        final Thread thread = idToThread.get(threadId);
+        if (thread == null) {
+            logger.info("Error getting post list because thread with ID={} does not exist!", threadId);
+            return null;
+        }
+        List<PostDetailsExtended> posts = new PostDAOImpl().getPostsByThread(threadId, since, limit, order);
+
+
+        // Add sorting here
+        return posts;
+    }
+
+    @Override
+    public ThreadDetailsExtended vote(long threadId, int vote) {
+        final Thread thread = idToThread.get(threadId);
+        if (thread == null) {
+            logger.info("Error vote because thread with ID={} does not exist!", threadId);
+            return null;
+        }
+        if (vote == 1) {
+            thread.like();
+        }
+        if (vote == -1) {
+            thread.dislike();
+        }
+        // save
+        return new ThreadDetailsExtended(thread);
+    }
 }

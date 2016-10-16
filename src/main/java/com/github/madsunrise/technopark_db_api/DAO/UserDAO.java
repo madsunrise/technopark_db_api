@@ -1,8 +1,13 @@
 package com.github.madsunrise.technopark_db_api.DAO;
 
 import com.github.madsunrise.technopark_db_api.model.User;
+import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.UserDetails;
 import com.github.madsunrise.technopark_db_api.response.UserDetailsExtended;
+import org.springframework.cglib.core.Local;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Created by ivan on 08.10.16.
@@ -21,4 +26,5 @@ public interface UserDAO {
     long getAmount();
     Long subscribe (long threadId, String email);
     Long unsubscribe (long threadId, String email);
+    List<PostDetailsExtended> getPosts(String email, LocalDateTime since, Integer limit, String order);
 }

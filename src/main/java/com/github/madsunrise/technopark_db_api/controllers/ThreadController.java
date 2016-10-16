@@ -2,9 +2,11 @@ package com.github.madsunrise.technopark_db_api.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.madsunrise.technopark_db_api.Codes;
+import com.github.madsunrise.technopark_db_api.DAO.PostDAOImpl;
 import com.github.madsunrise.technopark_db_api.DAO.ThreadDAO;
 import com.github.madsunrise.technopark_db_api.DAO.ThreadDAOImpl;
 import com.github.madsunrise.technopark_db_api.response.CustomResponse;
+import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.ThreadDetails;
 import com.github.madsunrise.technopark_db_api.response.ThreadDetailsExtended;
 import org.springframework.http.HttpStatus;
@@ -145,6 +147,39 @@ public class ThreadController {
     }
 
 
+    @RequestMapping(path = "/db/api/thread/listPosts", method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse listPosts(@RequestParam("user") Long threadId,
+                                    @RequestParam(value = "limit", required = false) Integer limit,
+                                    @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
+                                    @RequestParam(value = "since", required = false) String sinceStr,
+                                    @RequestParam(value = "sort", required = false, defaultValue = "flat") String sort){
+
+        LocalDateTime since = null;
+        if (!StringUtils.isEmpty(sinceStr)) {
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            since = LocalDateTime.parse(sinceStr, formatter);
+        }
+
+        final List<PostDetailsExtended> result = threadDAO.getPosts(threadId, since, limit, order, sort);
+        if (result == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
+        }
+        return new CustomResponse<>(Codes.OK, result);
+    }
+
+    @RequestMapping(path = "/db/api/thread/vote", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse vote(@RequestBody VoteRequest request) {
+
+        final ThreadDetailsExtended result = threadDAO.vote(request.getThreadId(), request.getVote());
+        if (result == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
+        }
+        return new CustomResponse<>(Codes.OK, result);
+    }
+
+
 
 
 
@@ -172,6 +207,27 @@ public class ThreadController {
                 return threadId;
             }
         }
+
+    private static class VoteRequest {
+        @JsonProperty("thread")
+        private long threadId;
+        @JsonProperty("vote")
+        private int vote;
+
+        @SuppressWarnings("unused")
+        VoteRequest() {
+        }
+        public VoteRequest(long threadId, int vote) {
+            this.threadId = threadId;
+            this.vote = vote;
+        }
+        public long getThreadId() {
+            return threadId;
+        }
+        public int getVote() {
+            return vote;
+        }
+    }
 
 
     private static class SubscribeBody {

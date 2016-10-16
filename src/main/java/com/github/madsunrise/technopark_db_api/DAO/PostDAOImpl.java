@@ -26,12 +26,7 @@ public class PostDAOImpl implements PostDAO {
 
     @Override
     public Post getById(long id) {
-        final Post post = idToPost.get(id);
-        if (post == null) {
-            logger.info("Post with ID={} not found!", id);
-            return null;
-        }
-        return post;
+        return idToPost.get(id);
     }
 
     @Override
@@ -121,8 +116,13 @@ public class PostDAOImpl implements PostDAO {
 
 
     @Override
-    public List<PostDetailsExtended> getPostsDetails(String forumShortName,
+    public List<PostDetailsExtended> getPostsByForum(String forumShortName,
                                                      LocalDateTime since, Integer limit, String order) {
+        final Forum forum = new ForumDAOImpl().getByShortName(forumShortName);
+        if (forum == null) {
+            logger.info("Error getting list posts because forum {} does not exists", forumShortName);
+            return null;
+        }
         List<PostDetailsExtended> allPosts = new ArrayList<>();
         for (Map.Entry<Long, Post> entry: idToPost.entrySet()) {
             final Post post = entry.getValue();
@@ -151,34 +151,129 @@ public class PostDAOImpl implements PostDAO {
         }
 
         // Sort по дате
-        if (order.equals("desc")) {
+        if (order.equals("asc")) {
+            Collections.sort(allPosts, new DateComparator());
+        }
+        else {
             Collections.sort(allPosts, Collections.reverseOrder(new DateComparator()));
         }
 
 
-        final List<PostDetailsExtended> result = new ArrayList<>();
-        if (limit == null) {
+        if (limit == null || limit > allPosts.size()) {
             limit = allPosts.size();
         }
-        for (int i = 0; i < allPosts.size() && i < limit; ++i) {
-            result.add(allPosts.get(i));
-        }
 
+        allPosts = allPosts.subList(0, limit);
         logger.info("Getting list posts success");
-        return result;
+        return allPosts;
     }
 
     @Override
-    public List<PostDetailsExtended> getPostsDetails(long threadId,
-                                                     LocalDateTime since, Integer limit, String order) {
+    public List<PostDetailsExtended> getPostsByThread(long threadId,
+                                                    LocalDateTime since, Integer limit, String order) {
         final Thread thread = new ThreadDAOImpl().getById(threadId);
         if (thread == null) {
             logger.info("Error getting list posts because thread with ID={} does not exists", threadId);
             return null;
         }
-        return this.getPostsDetails(thread.getForum(), since, limit, order);
+
+        List<PostDetailsExtended> allPosts = new ArrayList<>();
+        for (Map.Entry<Long, Post> entry: idToPost.entrySet()) {
+            final Post post = entry.getValue();
+            if (post.getThreadId() == threadId) {
+                final PostDetailsExtended postDetails = new PostDetailsExtended(post);
+                postDetails.setUser(post.getUser());
+                postDetails.setForum(post.getForum());
+                postDetails.setThread(post.getThreadId());
+                allPosts.add(postDetails);
+            }
+        }
+
+        // отсекаем старые посты
+        if (since != null) {
+            final List<PostDetailsExtended> temp = new ArrayList<>();
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+            for (PostDetailsExtended postDetails: allPosts) {
+                final String dateStr = postDetails.getDate();
+                final LocalDateTime date = LocalDateTime.parse(dateStr, formatter);
+                if (date.compareTo(since) >= 0) {
+                    temp.add(postDetails);
+                }
+            }
+            allPosts = temp;
+        }
+
+        // Sort по дате
+        if (order.equals("asc")) {
+            Collections.sort(allPosts, new DateComparator());
+        }
+        else {
+            Collections.sort(allPosts, Collections.reverseOrder(new DateComparator()));
+        }
+
+
+        if (limit == null || limit > allPosts.size()) {
+            limit = allPosts.size();
+        }
+
+        allPosts = allPosts.subList(0, limit);
+        logger.info("Getting list posts success");
+        return allPosts;
     }
 
+    @Override
+    public List<PostDetailsExtended> getPostsByUser(String userEmail, LocalDateTime since, Integer limit, String order) {
+        final User user = new UserDAOImpl().getByEmail(userEmail);
+        if (user == null) {
+            logger.info("Error getting list posts because user with email={} does not exists", userEmail);
+            return null;
+        }
+
+        List<PostDetailsExtended> allPosts = new ArrayList<>();
+        for (Map.Entry<Long, Post> entry: idToPost.entrySet()) {
+            final Post post = entry.getValue();
+            if (post.getUser().equals(userEmail)) {
+                final PostDetailsExtended postDetails = new PostDetailsExtended(post);
+                postDetails.setUser(post.getUser());
+                postDetails.setForum(post.getForum());
+                postDetails.setThread(post.getThreadId());
+                allPosts.add(postDetails);
+            }
+        }
+
+        // отсекаем старые посты
+        if (since != null) {
+            final List<PostDetailsExtended> temp = new ArrayList<>();
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+            for (PostDetailsExtended postDetails: allPosts) {
+                final String dateStr = postDetails.getDate();
+                final LocalDateTime date = LocalDateTime.parse(dateStr, formatter);
+                if (date.compareTo(since) >= 0) {
+                    temp.add(postDetails);
+                }
+            }
+            allPosts = temp;
+        }
+
+        // Sort по дате
+        if (order.equals("asc")) {
+            Collections.sort(allPosts, new DateComparator());
+        }
+        else {
+            Collections.sort(allPosts, Collections.reverseOrder(new DateComparator()));
+        }
+
+
+        if (limit == null || limit > allPosts.size()) {
+            limit = allPosts.size();
+        }
+
+        allPosts = allPosts.subList(0, limit);
+        logger.info("Getting list posts success");
+        return allPosts;
+    }
 
     static class IdComparator implements Comparator<PostDetailsExtended> {
         @Override
@@ -211,7 +306,7 @@ public class PostDAOImpl implements PostDAO {
 
     @Override
     public Long remove(long postId) {
-        final Post post = idToPost.get(postId);
+        final Post post = getById(postId);
         if (post == null) {
             logger.info("Error removing post with ID={} because it does not exist!", postId);
             return null;
@@ -225,7 +320,7 @@ public class PostDAOImpl implements PostDAO {
 
     @Override
     public Long restore(long postId) {
-        final Post post = idToPost.get(postId);
+        final Post post = getById(postId);
         if (post == null) {
             logger.info("Error restoring post with ID={} because it does not exist!", postId);
             return null;
@@ -235,5 +330,23 @@ public class PostDAOImpl implements PostDAO {
         thread.addPost();
         logger.info("Restoring post with ID={} is success", postId);
         return post.getId();
+    }
+
+    @Override
+    public PostDetailsExtended vote(long postId, int vote) {
+        final Post post = getById(postId);
+        if (post == null) {
+            logger.info("Error vote because post with ID={} does not exist!", postId);
+            return null;
+        }
+        if (vote == 1) {
+            post.like();
+        }
+        if (vote == -1) {
+            post.dislike();
+        }
+        // save
+        return new PostDetailsExtended(post);
+
     }
 }

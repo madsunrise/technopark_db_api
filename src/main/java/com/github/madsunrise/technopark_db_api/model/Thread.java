@@ -141,25 +141,16 @@ public class Thread {
         return likes;
     }
 
-    public void setLikes(int likes) {
-        this.likes = likes;
-    }
 
     public int getDislikes() {
         return dislikes;
     }
 
-    public void setDislikes(int dislikes) {
-        this.dislikes = dislikes;
-    }
 
     public int getPoints() {
         return points;
     }
 
-    public void setPoints(int points) {
-        this.points = points;
-    }
 
     public int getPosts() {
         return posts;
@@ -178,8 +169,10 @@ public class Thread {
 
     public void like() {
         likes++;
+        points++;
     }
     public void dislike() {
-        likes--;
+        dislikes++;
+        points--;
     }
 }

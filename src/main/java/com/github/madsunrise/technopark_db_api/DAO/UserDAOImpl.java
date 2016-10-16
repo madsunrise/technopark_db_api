@@ -1,12 +1,15 @@
 package com.github.madsunrise.technopark_db_api.DAO;
 
 import com.github.madsunrise.technopark_db_api.model.User;
+import com.github.madsunrise.technopark_db_api.response.PostDetails;
+import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.UserDetails;
 import com.github.madsunrise.technopark_db_api.response.UserDetailsExtended;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -106,6 +109,9 @@ public class UserDAOImpl implements UserDAO {
 
         List<String> followers = new ArrayList<>();
         followers.addAll(user.getFollowers());
+        if (followers.isEmpty()) {
+            new UserDetailsExtended(user);
+        }
 
         // разрулим неопределенности
         if (order == null) {
@@ -120,10 +126,13 @@ public class UserDAOImpl implements UserDAO {
                     cutted.add(followerEmail);
                 }
             }
+            if (cutted.isEmpty()) {
+                new UserDetailsExtended(user);
+            }
             followers = cutted;
         }
 
-        if (limit == null) {
+        if (limit == null || limit > followers.size()) {
             limit = followers.size();
         }
 
@@ -152,6 +161,9 @@ public class UserDAOImpl implements UserDAO {
 
         List<String> following = new ArrayList<>();
         following.addAll(user.getFollowing());
+        if (following.isEmpty()) {
+            new UserDetailsExtended(user);
+        }
 
         // разрулим неопределенности
         if (order == null) {
@@ -166,10 +178,13 @@ public class UserDAOImpl implements UserDAO {
                     cutted.add(followerEmail);
                 }
             }
+            if (cutted.isEmpty()) {
+                new UserDetailsExtended(user);
+            }
             following = cutted;
         }
 
-        if (limit == null) {
+        if (limit == null || limit > following.size()) {
             limit = following.size();
         }
 
@@ -245,5 +260,16 @@ public class UserDAOImpl implements UserDAO {
         }
         user.unsubscribe(threadId);
         return user.getId();
+    }
+
+
+    @Override
+    public List<PostDetailsExtended> getPosts(String email, LocalDateTime since, Integer limit, String order) {
+        final User user = emailToUser.get(email);
+        if (user == null) {
+            logger.info("Error getting posts - user with email \"{}\" does not exist!", email);
+            return null;
+        }
+        return new PostDAOImpl().getPostsByUser(email, since, limit, order);
     }
 }

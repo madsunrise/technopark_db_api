@@ -16,6 +16,9 @@ public class PostDetailsExtended extends PostDetails {
 
     public PostDetailsExtended(Post post) {
         super(post);
+        likes = post.getLikes();
+        dislikes = post.getDislikes();
+        points = post.getPoints();
     }
 
     public int getLikes() {

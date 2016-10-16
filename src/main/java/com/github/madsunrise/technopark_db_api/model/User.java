@@ -84,43 +84,9 @@ public class User {
         return followers;
     }
 
-
-//
-//
     public Set<String> getFollowing() {
         return following;
     }
-//    public List<String> getFollowing (Integer limit, String order, Integer sinceId) {
-//        if (order == null || !order.equals("asc")) {
-//            order = "desc";
-//        }
-//        else {
-//            order = "asc";
-//        }
-//        List<String> result = new ArrayList<>();
-//
-//        if (limit == null) {
-//            limit = following.size();
-//        }
-//        if (sinceId == null) {
-//            sinceId = -1;
-//        }
-//
-//        for (int i = 0; i < following.size() && i < limit; i++) {
-//            String email = following.get(i);
-//            User user = new UserDAOImpl().getByEmail(email);
-//            if (user.getId() >= sinceId) {
-//                result.add(email);
-//            }
-//        }
-//        if (order.equals("asc")) {
-//            Collections.sort(result);
-//        }
-//        else {
-//            Collections.sort(result, Collections.reverseOrder());
-//        }
-//        return result;
-//    }
 
 
 
@@ -138,27 +104,19 @@ public class User {
     }
 
     public void addFollower (String follower) {
-        if (!followers.contains(follower)) {
             followers.add(follower);
-        }
     }
 
     public void removeFollower (String follower) {
-        if (followers.contains(follower)) {
             followers.remove(follower);
-        }
     }
 
 
     public void addFollowee (String followee) {
-        if (!following.contains(followee)) {
             following.add(followee);
-        }
     }
 
     public void removeFollowee (String followee) {
-        if (following.contains(followee)) {
             following.remove(followee);
-        }
     }
 }

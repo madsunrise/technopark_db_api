@@ -19,11 +19,16 @@ public interface PostDAO {
     PostDetailsExtended getDetails(long id, List<String> related);
     void clear();
     long getAmount();
-    List<PostDetailsExtended> getPostsDetails(String forumShortName,
+    List<PostDetailsExtended> getPostsByForum(String forumShortName,
                                               LocalDateTime since, Integer limit, String order);
-    List<PostDetailsExtended> getPostsDetails(long threadId,
-                                              LocalDateTime since, Integer limit, String order);
+    List<PostDetailsExtended> getPostsByThread(long threadId,
+                                               LocalDateTime since, Integer limit, String order);
+
+    List<PostDetailsExtended> getPostsByUser(String userEmail,
+                                             LocalDateTime since, Integer limit, String order);
+
     Long remove (long postId);
     Long restore (long postId);
     void markDeleted(long threadId);
+    PostDetailsExtended vote(long postId, int vote);
 }

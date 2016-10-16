@@ -184,15 +184,14 @@ public class Post {
         return points;
     }
 
-    public void setPoints(int points) {
-        this.points = points;
-    }
 
     public void like() {
         likes++;
+        points++;
     }
 
     public void dislike() {
         dislikes++;
+        points--;
     }
 }

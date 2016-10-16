@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.madsunrise.technopark_db_api.Codes;
 import com.github.madsunrise.technopark_db_api.DAO.UserDAO;
 import com.github.madsunrise.technopark_db_api.DAO.UserDAOImpl;
+import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.UserDetails;
 import com.github.madsunrise.technopark_db_api.response.CustomResponse;
 
@@ -11,6 +12,10 @@ import com.github.madsunrise.technopark_db_api.response.UserDetailsExtended;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * Created by ivan on 11.10.16.
@@ -105,7 +110,7 @@ public class UserController {
                                         @RequestParam(value = "since_id", required = false) Integer sinceId){
         final UserDetailsExtended result = userDAO.getFollowers(email, limit, order, sinceId);
         if (result == null) {
-            return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
+            return new CustomResponse<>(Codes.NOT_FOUND, "Not found");
         }
         return new CustomResponse<>(Codes.OK, result);
     }
@@ -115,7 +120,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse listFollowing(@RequestParam("user") String email,
                                         @RequestParam(value = "limit", required = false) Integer limit,
-                                        @RequestParam(value = "order", required = false) String order,
+                                        @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
                                         @RequestParam(value = "since_id", required = false) Integer sinceId){
         final UserDetailsExtended result = userDAO.getFollowing(email, limit, order, sinceId);
         if (result == null) {
@@ -123,6 +128,31 @@ public class UserController {
         }
         return new CustomResponse<>(Codes.OK, result);
     }
+
+
+
+
+
+    @RequestMapping(path = "/db/api/user/listPosts", method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse listPosts(@RequestParam("user") String email,
+                                        @RequestParam(value = "limit", required = false) Integer limit,
+                                        @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
+                                        @RequestParam(value = "since", required = false) String sinceStr){
+
+        LocalDateTime since = null;
+        if (!StringUtils.isEmpty(sinceStr)) {
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            since = LocalDateTime.parse(sinceStr, formatter);
+        }
+
+        final List<PostDetailsExtended> result = userDAO.getPosts(email, since, limit, order);
+        if (result == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
+        }
+        return new CustomResponse<>(Codes.OK, result);
+    }
+
 
 
 
