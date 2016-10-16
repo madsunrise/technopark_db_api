@@ -49,18 +49,18 @@ public class ThreadController {
     @RequestMapping(path = "/db/api/thread/details", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse details(@RequestParam("thread") int threadId,
-                                  @RequestParam(value = "related", required = false) List<String> array) {
+                                  @RequestParam(value = "related", required = false) List<String> related) {
 
-        if (array != null) {
-            switch (array.size()) {
+        if (related != null) {
+            switch (related.size()) {
                 case 1: {
-                    if (!array.contains("user") && !array.contains("forum")) {
+                    if (!related.contains("user") && !related.contains("forum")) {
                         return new CustomResponse<>(Codes.INCORRECT_REQUEST, "Bad parametres");
                     }
                     break;
                 }
                 case 2: {
-                    if (!(array.contains("user") && array.contains("forum"))) {
+                    if (!(related.contains("user") && related.contains("forum"))) {
                         return new CustomResponse<>(Codes.INCORRECT_REQUEST, "Bad parametres");
                     }
                     break;
@@ -71,7 +71,7 @@ public class ThreadController {
             }
         }
 
-        final ThreadDetailsExtended result = threadDAO.getDetails(threadId, array);
+        final ThreadDetailsExtended result = threadDAO.getDetails(threadId, related);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
         }
@@ -163,7 +163,7 @@ public class ThreadController {
 
     @RequestMapping(path = "/db/api/thread/listPosts", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse listPosts(@RequestParam("user") Long threadId,
+    public CustomResponse listPosts(@RequestParam("thread") Long threadId,
                                     @RequestParam(value = "limit", required = false) Integer limit,
                                     @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
                                     @RequestParam(value = "since", required = false) String sinceStr,
@@ -177,7 +177,7 @@ public class ThreadController {
 
         final List<PostDetailsExtended> result = threadDAO.getPosts(threadId, since, limit, order, sort);
         if (result == null) {
-            return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
+            return new CustomResponse<>(Codes.NOT_FOUND, "Not found");
         }
         return new CustomResponse<>(Codes.OK, result);
     }

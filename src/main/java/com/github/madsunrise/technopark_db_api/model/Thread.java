@@ -153,6 +153,9 @@ public class Thread {
 
 
     public int getPosts() {
+        if (deleted) {
+            return 0;
+        }
         return posts;
     }
 

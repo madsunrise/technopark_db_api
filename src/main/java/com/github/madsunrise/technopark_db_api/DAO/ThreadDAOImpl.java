@@ -76,6 +76,11 @@ public class ThreadDAOImpl implements ThreadDAO {
     }
 
     @Override
+    public ThreadDetailsExtended getDetails(long threadId) {
+       return this.getDetails(threadId, null);
+    }
+
+    @Override
     public ThreadDetailsExtended getDetails(long threadId, List<String> related)
     {
         final Thread thread = getById(threadId);

@@ -148,7 +148,7 @@ public class UserController {
 
         final List<PostDetailsExtended> result = userDAO.getPosts(email, since, limit, order);
         if (result == null) {
-            return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
+            return new CustomResponse<>(Codes.NOT_FOUND, "Not found");
         }
         return new CustomResponse<>(Codes.OK, result);
     }

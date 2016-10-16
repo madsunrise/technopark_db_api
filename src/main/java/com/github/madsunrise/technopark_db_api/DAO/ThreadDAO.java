@@ -17,6 +17,7 @@ public interface ThreadDAO {
                           String message, String slug, /*optional*/ boolean deleted);
     Long close (long threadId);
     Long open (long threadId);
+    ThreadDetailsExtended getDetails (long threadId);
     ThreadDetailsExtended getDetails (long threadId, List<String> related);
     void clear();
     long getAmount();

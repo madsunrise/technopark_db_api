@@ -92,7 +92,7 @@ public class PostDAOImpl implements PostDAO {
         }
 
         if (related != null && related.contains("thread")) {
-            ThreadDetailsExtended threadDetails = new ThreadDAOImpl().getDetails(post.getThreadId(), null);
+            ThreadDetailsExtended threadDetails = new ThreadDAOImpl().getDetails(post.getThreadId());
             result.setThread(threadDetails);
         }
         else {
@@ -118,6 +118,12 @@ public class PostDAOImpl implements PostDAO {
     @Override
     public List<PostDetailsExtended> getPostsByForum(String forumShortName,
                                                      LocalDateTime since, Integer limit, String order) {
+        return this.getPostsByForum(forumShortName, since, limit, order, null);
+    }
+
+    @Override
+    public List<PostDetailsExtended> getPostsByForum(String forumShortName, LocalDateTime since,
+                                                     Integer limit, String order, List<String> related) {
         final Forum forum = new ForumDAOImpl().getByShortName(forumShortName);
         if (forum == null) {
             logger.info("Error getting list posts because forum {} does not exists", forumShortName);
@@ -128,9 +134,30 @@ public class PostDAOImpl implements PostDAO {
             final Post post = entry.getValue();
             if (post.getForum().equals(forumShortName)) {
                 final PostDetailsExtended postDetails = new PostDetailsExtended(post);
-                postDetails.setUser(post.getUser());
-                postDetails.setForum(forumShortName);
-                postDetails.setThread(post.getThreadId());
+                if (related != null && related.contains("forum")) {
+                    final ForumDetails forumDetails = new ForumDAOImpl().getDetails(post.getForum(), null);
+                    postDetails.setForum(forumDetails);
+                }
+                else {
+                    postDetails.setForum(forumShortName);
+                }
+
+                if (related != null && related.contains("thread")) {
+                    final ThreadDetailsExtended threadDetails = new ThreadDAOImpl().getDetails(post.getThreadId());
+                    postDetails.setThread(threadDetails);
+                }
+                else {
+                    postDetails.setThread(post.getThreadId());
+                }
+
+                if (related != null && related.contains("user")) {
+                    final UserDetailsExtended userDetails = new UserDAOImpl().getDetails(post.getUser());
+                    postDetails.setUser(userDetails);
+                }
+                else {
+                    postDetails.setUser(post.getUser());
+                }
+
                 allPosts.add(postDetails);
             }
         }
@@ -167,6 +194,7 @@ public class PostDAOImpl implements PostDAO {
         logger.info("Getting list posts success");
         return allPosts;
     }
+
 
     @Override
     public List<PostDetailsExtended> getPostsByThread(long threadId,

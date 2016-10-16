@@ -21,6 +21,8 @@ public interface PostDAO {
     long getAmount();
     List<PostDetailsExtended> getPostsByForum(String forumShortName,
                                               LocalDateTime since, Integer limit, String order);
+    List<PostDetailsExtended> getPostsByForum(String forumShortName,
+                                              LocalDateTime since, Integer limit, String order, List<String> related);
     List<PostDetailsExtended> getPostsByThread(long threadId,
                                                LocalDateTime since, Integer limit, String order);
 

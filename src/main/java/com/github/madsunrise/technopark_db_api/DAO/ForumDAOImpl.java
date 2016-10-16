@@ -3,10 +3,13 @@ package com.github.madsunrise.technopark_db_api.DAO;
 import com.github.madsunrise.technopark_db_api.model.Forum;
 import com.github.madsunrise.technopark_db_api.model.User;
 import com.github.madsunrise.technopark_db_api.response.ForumDetails;
+import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.UserDetailsExtended;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,17 +23,12 @@ public class ForumDAOImpl implements ForumDAO {
 
     @Override
     public Forum getByShortName(String shortName) {
-        final Forum forum = shortNameToForum.get(shortName);
-        if (forum == null) {
-            logger.info("Forum with short_name = \"{}\" not found!", shortName);
-            return null;
-        }
-        return forum;
+        return shortNameToForum.get(shortName);
     }
 
     @Override
     public ForumDetails create(String name, String shortName, String userEmail) {
-        Forum forum = shortNameToForum.get(shortName);
+        Forum forum = getByShortName(shortName);
         if (forum != null) {
             logger.info("Error creating forum \"{}\": it's already exists!", name);
         }
@@ -49,9 +47,9 @@ public class ForumDAOImpl implements ForumDAO {
 
     @Override
     public ForumDetails getDetails(String shortName, String related) {
-        final Forum forum = shortNameToForum.get(shortName);
+        final Forum forum = getByShortName(shortName);
         if (forum == null) {
-            logger.info("Error getting forum details - \"{}\": does not exist!", shortName);
+            logger.info("Error getting forum details because forum \"{}\": does not exist!", shortName);
             return null;
         }
         logger.info("Getting forum details \"{}\" is success", shortName);
@@ -73,5 +71,17 @@ public class ForumDAOImpl implements ForumDAO {
     @Override
     public long getAmount() {
         return shortNameToForum.size();
+    }
+
+
+    @Override
+    public List<PostDetailsExtended> getPosts(String shortName, LocalDateTime since,
+                                              Integer limit, String order, List<String> related) {
+        final Forum forum = getByShortName(shortName);
+        if (forum == null) {
+            logger.info("Error getting forum posts because forum \"{}\": does not exist!", shortName);
+            return null;
+        }
+        return new PostDAOImpl().getPostsByForum(shortName, since, limit, order, related);
     }
 }
