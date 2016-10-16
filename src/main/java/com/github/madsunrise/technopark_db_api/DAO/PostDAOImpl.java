@@ -51,6 +51,7 @@ public class PostDAOImpl implements PostDAO {
 
         final Post post = new Post(message, date, threadId, userEmail, user.getId(), forumShortName, forum.getId(),
                 parent, approved, highlighted, edited, spam, deleted);
+        post.setPath(generatePath(parent));
         idToPost.put(post.getId(), post);
 
         logger.info("Post with ID={} and forum={} successful created", post.getId(), post.getForum());
@@ -392,4 +393,64 @@ public class PostDAOImpl implements PostDAO {
         post.setMessage(message);
         return new PostDetailsExtended(post);
     }
+
+
+    private String generatePath (Long parentId) {
+        final StringBuilder result = new StringBuilder();
+        if (parentId != null) {
+            final Post post = getById(parentId);
+            final String parentPath = post.getPath();
+            result.append(parentPath);
+            result.append('.');
+        }
+
+        final int index = getMaxChildIndex(parentId) + 1;
+        String indexStr = Integer.toString(index);
+        switch (indexStr.length()) {
+            case 1: indexStr = "000" + indexStr;
+                break;
+            case 2: indexStr = "00" + indexStr;
+                break;
+            case 3: indexStr = '0' + indexStr;
+                break;
+            default: break;
+        }
+
+        result.append(indexStr);
+        return result.toString();
+    }
+
+
+    private int getMaxChildIndex (Long parentId) {
+        int max = 0;
+
+        if (parentId == null) {
+            for (Map.Entry<Long, Post> entry : idToPost.entrySet()) {
+                final Post post = entry.getValue();
+                if (post.getParent() == null) {
+                    final String path = post.getPath();
+                    final int currentIndex = Integer.parseInt(path);
+                    if (currentIndex > max) {
+                        max = currentIndex;
+                    }
+                }
+            }
+        }
+        else {
+            for (Map.Entry<Long, Post> entry : idToPost.entrySet()) {
+                final Post post = entry.getValue();
+                if (post.getParent() != null && post.getParent().equals(parentId)) {
+                    final String path = post.getPath();
+                    final String[] parts = path.split("\\.");
+                    final int currentIndex = Integer.parseInt(parts[parts.length - 1]);
+                    if (currentIndex > max) {
+                        max = currentIndex;
+                    }
+                }
+            }
+        }
+        return max;
+    }
+
+
 }

@@ -200,8 +200,8 @@ public class ThreadDAOImpl implements ThreadDAO {
             logger.info("Error getting post list because thread with ID={} does not exist!", threadId);
             return null;
         }
-        final List<PostDetailsExtended> posts = new PostDAOImpl().getPostsByThread(threadId, since, null, order);
 
+        final List<PostDetailsExtended> posts = new PostDAOImpl().getPostsByThread(threadId, since, null, order);
 
         // Add sort here
         if (sort.equals("flat")) {
@@ -222,6 +222,25 @@ public class ThreadDAOImpl implements ThreadDAO {
             }
         }
 
+        if (limit != null && limit < posts.size()) {
+            if (sort.equals("parent_tree")) {
+                int rootCount = 0;
+                int postsCount = 0;
+                for (PostDetailsExtended postDetails: posts) {
+                    String path = postDetails.getPath();
+                    if (!path.contains(".")) {  // Перед нами корневой пост
+                        rootCount++;
+                        if (rootCount > limit) {
+                            break;
+                        }
+                    }
+                    postsCount++;
+                }
+                return posts.subList(0, postsCount);
+            }
+
+            return posts.subList(0, limit); // для flat и tree
+        }
 
         return posts;
     }

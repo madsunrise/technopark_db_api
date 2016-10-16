@@ -29,6 +29,8 @@ public class Post {
     private int dislikes;
     private int points;
 
+    private String path;
+
 
     private static final AtomicLong ID_GENETATOR = new AtomicLong(0);
 
@@ -193,5 +195,13 @@ public class Post {
     public void dislike() {
         dislikes++;
         points--;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 }

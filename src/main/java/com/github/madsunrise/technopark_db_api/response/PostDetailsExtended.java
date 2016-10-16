@@ -1,5 +1,6 @@
 package com.github.madsunrise.technopark_db_api.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.madsunrise.technopark_db_api.model.Post;
 
@@ -14,11 +15,15 @@ public class PostDetailsExtended extends PostDetails {
     @JsonProperty("points")
     private int points;
 
+    @JsonIgnore
+    private String path;
+
     public PostDetailsExtended(Post post) {
         super(post);
         likes = post.getLikes();
         dislikes = post.getDislikes();
         points = post.getPoints();
+        path = post.getPath();
     }
 
     public int getLikes() {
@@ -43,5 +48,13 @@ public class PostDetailsExtended extends PostDetails {
 
     public void setPoints(int points) {
         this.points = points;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 }
