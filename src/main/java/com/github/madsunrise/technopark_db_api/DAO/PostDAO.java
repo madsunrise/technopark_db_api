@@ -30,5 +30,6 @@ public interface PostDAO {
     Long remove (long postId);
     Long restore (long postId);
     void markDeleted(long threadId);
+    void markRestored (long threadId);
     PostDetailsExtended vote(long postId, int vote);
 }

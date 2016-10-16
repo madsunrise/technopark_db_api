@@ -303,6 +303,15 @@ public class PostDAOImpl implements PostDAO {
         }
     }
 
+    @Override
+    public void markRestored(long threadId) {
+        for (Map.Entry<Long, Post> entry: idToPost.entrySet()) {
+            final Post post = entry.getValue();
+            if (post.getThreadId() == threadId) {
+                post.setDeleted(false);
+            }
+        }
+    }
 
     @Override
     public Long remove(long postId) {

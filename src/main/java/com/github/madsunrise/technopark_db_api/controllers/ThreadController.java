@@ -116,6 +116,20 @@ public class ThreadController {
         return new CustomResponse<>(Codes.OK, result);
     }
 
+    @RequestMapping(path = "/db/api/thread/restore", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse restore(@RequestBody ThreadId request) {
+        final Long id = threadDAO.restore(request.getThreadId());
+        if (id == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "Thread not found");
+        }
+        final ThreadId result = new ThreadId(id);
+        return new CustomResponse<>(Codes.OK, result);
+    }
+
+
+
+
 
     @RequestMapping(path = "/db/api/thread/subscribe", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
@@ -173,6 +187,21 @@ public class ThreadController {
     public CustomResponse vote(@RequestBody VoteRequest request) {
 
         final ThreadDetailsExtended result = threadDAO.vote(request.getThreadId(), request.getVote());
+        if (result == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
+        }
+        return new CustomResponse<>(Codes.OK, result);
+    }
+
+    @RequestMapping(path = "/db/api/thread/update", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse update(@RequestBody UpdateRequest request) {
+        if (StringUtils.isEmpty(StringUtils.isEmpty(request.slug)
+                || StringUtils.isEmpty(request.message))) {
+            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+        }
+
+        final ThreadDetailsExtended result = threadDAO.update(request.threadId, request.message, request.slug);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
         }
@@ -293,6 +322,38 @@ public class ThreadController {
             this.slug = slug;
             this.closed = closed;
             this.deleted = deleted;
+        }
+    }
+
+
+    private static class UpdateRequest {
+        @JsonProperty("message")
+        private String message;
+        @JsonProperty("slug")
+        private String slug;
+        @JsonProperty("thread")
+        private long threadId;
+
+        @SuppressWarnings("unused")
+        UpdateRequest() {
+        }
+
+        public UpdateRequest(String message, String slug, long threadId) {
+            this.message = message;
+            this.slug = slug;
+            this.threadId = threadId;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public String getSlug() {
+            return slug;
+        }
+
+        public long getThreadId() {
+            return threadId;
         }
     }
 }

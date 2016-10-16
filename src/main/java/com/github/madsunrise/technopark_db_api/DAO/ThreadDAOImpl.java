@@ -22,12 +22,7 @@ public class ThreadDAOImpl implements ThreadDAO {
 
     @Override
     public Thread getById(long id) {
-        final Thread thread = idToThread.get(id);
-        if (thread == null) {
-            logger.info("Thread with ID={} not found!", id);
-            return null;
-        }
-        return thread;
+        return idToThread.get(id);
     }
 
     @Override
@@ -58,7 +53,7 @@ public class ThreadDAOImpl implements ThreadDAO {
 
     @Override
     public Long close(long threadId) {
-        final Thread thread = idToThread.get(threadId);
+        final Thread thread = getById(threadId);
         if (thread == null) {
             logger.info("Error closing thread with ID={} because it does not exist", threadId);
             return null;
@@ -70,7 +65,7 @@ public class ThreadDAOImpl implements ThreadDAO {
 
     @Override
     public Long open(long threadId) {
-        final Thread thread = idToThread.get(threadId);
+        final Thread thread = getById(threadId);
         if (thread == null) {
             logger.info("Error opening thread with ID={} because it does not exist!", threadId);
             return null;
@@ -83,7 +78,7 @@ public class ThreadDAOImpl implements ThreadDAO {
     @Override
     public ThreadDetailsExtended getDetails(long threadId, List<String> related)
     {
-        final Thread thread = idToThread.get(threadId);
+        final Thread thread = getById(threadId);
         if (thread == null) {
             logger.info("Error getting thread details - thread with ID={}: does not exist!", threadId);
             return null;
@@ -133,7 +128,7 @@ public class ThreadDAOImpl implements ThreadDAO {
 
     @Override
     public Long remove(long threadId) {
-        final Thread thread = idToThread.get(threadId);
+        final Thread thread = getById(threadId);
         if (thread == null) {
             logger.info("Error removing thread with ID={} because it does not exist!", threadId);
             return null;
@@ -147,8 +142,23 @@ public class ThreadDAOImpl implements ThreadDAO {
     }
 
     @Override
+    public Long restore(long threadId) {
+        final Thread thread = getById(threadId);
+        if (thread == null) {
+            logger.info("Error restoring thread with ID={} because it does not exist!", threadId);
+            return null;
+        }
+        thread.setDeleted(false);
+
+        new PostDAOImpl().markRestored(threadId);
+
+        logger.info("Restoring thread with ID={}", threadId);
+        return thread.getId();
+    }
+
+    @Override
     public Long subscribe(long threadId, String userEmail) {
-        final Thread thread = idToThread.get(threadId);
+        final Thread thread = getById(threadId);
         if (thread == null) {
             logger.info("Error subscribing user because thread with ID={} does not exist!", threadId);
             return null;
@@ -163,7 +173,7 @@ public class ThreadDAOImpl implements ThreadDAO {
 
     @Override
     public Long unsubscribe(long threadId, String userEmail) {
-        final Thread thread = idToThread.get(threadId);
+        final Thread thread = getById(threadId);
         if (thread == null) {
             logger.info("Error unsubscribing user because thread with ID={} does not exist!", threadId);
             return null;
@@ -178,7 +188,7 @@ public class ThreadDAOImpl implements ThreadDAO {
 
     @Override
     public List<PostDetailsExtended> getPosts(long threadId, LocalDateTime since, Integer limit, String order, String sort) {
-        final Thread thread = idToThread.get(threadId);
+        final Thread thread = getById(threadId);
         if (thread == null) {
             logger.info("Error getting post list because thread with ID={} does not exist!", threadId);
             return null;
@@ -192,7 +202,7 @@ public class ThreadDAOImpl implements ThreadDAO {
 
     @Override
     public ThreadDetailsExtended vote(long threadId, int vote) {
-        final Thread thread = idToThread.get(threadId);
+        final Thread thread = getById(threadId);
         if (thread == null) {
             logger.info("Error vote because thread with ID={} does not exist!", threadId);
             return null;
@@ -204,6 +214,18 @@ public class ThreadDAOImpl implements ThreadDAO {
             thread.dislike();
         }
         // save
+        return new ThreadDetailsExtended(thread);
+    }
+
+    @Override
+    public ThreadDetailsExtended update(long threadId, String message, String slug) {
+        final Thread thread = getById(threadId);
+        if (thread == null) {
+            logger.info("Error updating because thread with ID={} does not exist!", threadId);
+            return null;
+        }
+        thread.setMessage(message);
+        thread.setSlug(slug);
         return new ThreadDetailsExtended(thread);
     }
 }

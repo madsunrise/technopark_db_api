@@ -22,8 +22,10 @@ public interface ThreadDAO {
     long getAmount();
     long save (Thread thread);
     Long remove (long threadId);
+    Long restore (long threadId);
     Long subscribe (long threadId, String userEmail);
     Long unsubscribe (long threadId, String userEmail);
     List<PostDetailsExtended> getPosts (long threadId, LocalDateTime since, Integer limit, String order, String sort);
     ThreadDetailsExtended vote(long threadId, int vote);
+    ThreadDetailsExtended update (long threadId, String message, String slug);
 }
