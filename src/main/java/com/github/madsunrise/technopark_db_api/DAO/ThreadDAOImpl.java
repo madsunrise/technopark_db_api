@@ -277,7 +277,12 @@ public class ThreadDAOImpl implements ThreadDAO {
     }
 
     @Override
-    public List<ThreadDetailsExtended> getThreads(String forumShortName, LocalDateTime since, Integer limit, String order, List<String> related) {
+    public List<ThreadDetailsExtended> getThreadsByForum(String forumShortName, LocalDateTime since, Integer limit, String order) {
+        return this.getThreadsByForum(forumShortName, since, limit, order, null);
+    }
+
+    @Override
+    public List<ThreadDetailsExtended> getThreadsByForum(String forumShortName, LocalDateTime since, Integer limit, String order, List<String> related) {
         List<ThreadDetailsExtended> threads = new ArrayList<>();
         for (Map.Entry<Long, Thread> entry: idToThread.entrySet()) {
             final Thread thread = entry.getValue();
@@ -305,7 +310,54 @@ public class ThreadDAOImpl implements ThreadDAO {
             }
         }
 
-        // отсекаем старые посты
+        // отсекаем старые треды
+        if (since != null) {
+            final List<ThreadDetailsExtended> temp = new ArrayList<>();
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+            for (ThreadDetailsExtended threadDetails: threads) {
+                final String dateStr = threadDetails.getDate();
+                final LocalDateTime date = LocalDateTime.parse(dateStr, formatter);
+                if (date.compareTo(since) >= 0) {
+                    temp.add(threadDetails);
+                }
+            }
+            threads = temp;
+        }
+
+        // Sort по дате
+        if (order.equals("asc")) {
+            Collections.sort(threads, new DateComparator());
+        }
+        else {
+            Collections.sort(threads, Collections.reverseOrder(new DateComparator()));
+        }
+
+
+        if (limit == null || limit > threads.size()) {
+            limit = threads.size();
+        }
+
+        logger.info("Getting list threads success");
+        return threads.subList(0, limit);
+    }
+
+
+    @Override
+    public List<ThreadDetailsExtended> getThreadsByUser(String userEmail, LocalDateTime since, Integer limit, String order) {
+        List<ThreadDetailsExtended> threads = new ArrayList<>();
+        for (Map.Entry<Long, Thread> entry: idToThread.entrySet()) {
+            final Thread thread = entry.getValue();
+
+            if (thread.getUser().equals(userEmail)) {
+                final ThreadDetailsExtended threadDetails = new ThreadDetailsExtended(thread);
+                threadDetails.setForum(thread.getForum());
+                threadDetails.setUser(userEmail);
+                threads.add(threadDetails);
+            }
+        }
+
+        // отсекаем старые треды
         if (since != null) {
             final List<ThreadDetailsExtended> temp = new ArrayList<>();
             final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");

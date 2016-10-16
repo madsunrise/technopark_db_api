@@ -80,7 +80,7 @@ public class PostController {
             result = postDAO.getPostsByThread(threadId, since, limit, order);
         }
 
-        if (StringUtils.isEmpty(result)) {
+        if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "No posts");
         }
 

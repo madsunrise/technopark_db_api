@@ -162,7 +162,7 @@ public class UserDAOImpl implements UserDAO {
 
         final Set<String> followeesEmail = new HashSet<>();
         followeesEmail.addAll(user.getFollowees());
-        
+
 
 
         if (order == null) {

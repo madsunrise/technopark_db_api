@@ -99,7 +99,7 @@ public class ForumDAOImpl implements ForumDAO {
             logger.info("Error getting forum's threads because forum \"{}\": does not exist!", shortName);
             return null;
         }
-        return new ThreadDAOImpl().getThreads(shortName, since, limit, order, related);
+        return new ThreadDAOImpl().getThreadsByForum(shortName, since, limit, order, related);
     }
 
     @Override

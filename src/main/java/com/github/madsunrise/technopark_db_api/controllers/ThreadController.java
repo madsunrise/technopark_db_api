@@ -2,7 +2,6 @@ package com.github.madsunrise.technopark_db_api.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.madsunrise.technopark_db_api.Codes;
-import com.github.madsunrise.technopark_db_api.DAO.PostDAOImpl;
 import com.github.madsunrise.technopark_db_api.DAO.ThreadDAO;
 import com.github.madsunrise.technopark_db_api.DAO.ThreadDAOImpl;
 import com.github.madsunrise.technopark_db_api.response.CustomResponse;
@@ -205,6 +204,38 @@ public class ThreadController {
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
         }
+        return new CustomResponse<>(Codes.OK, result);
+    }
+
+    @RequestMapping(path = "/db/api/thread/list/", method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse list(@RequestParam(value = "forum", required = false) String forumShortName,
+                               @RequestParam(value = "user", required = false) String userEmail,
+                               @RequestParam(value = "since", required = false) String sinceStr,
+                               @RequestParam(value = "limit", required = false) Integer limit,
+                               @RequestParam(value = "order", required = false, defaultValue = "desc") String order) {
+
+        if (StringUtils.isEmpty(forumShortName) && StringUtils.isEmpty(userEmail)) {
+            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+        }
+
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime since = null;
+        if (!StringUtils.isEmpty(sinceStr)) {
+            since = LocalDateTime.parse(sinceStr, formatter);
+        }
+
+        final List<ThreadDetailsExtended> result;
+        if (!StringUtils.isEmpty(forumShortName)) {
+            result = threadDAO.getThreadsByForum(forumShortName, since, limit, order);
+        } else {
+            result = threadDAO.getThreadsByUser(userEmail, since, limit, order);
+        }
+
+        if (result == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "No threads");
+        }
+
         return new CustomResponse<>(Codes.OK, result);
     }
 
