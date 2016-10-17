@@ -6,12 +6,21 @@ import com.github.madsunrise.technopark_db_api.response.UserDetails;
 import com.github.madsunrise.technopark_db_api.response.UserDetailsExtended;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by ivan on 17.10.16.
@@ -63,8 +72,41 @@ public class UserDAODataBaseImpl implements UserDAO {
 
     @Override
     public UserDetails create(String username, String name, String email, String about, boolean anonymous) {
-        return null;
+        final User user = new User(username, name, email, about, anonymous);
+        final KeyHolder keyHolder = new GeneratedKeyHolder();
+        try {
+            template.update(new UserPstCreator(user), keyHolder);
+        }
+        catch (DuplicateKeyException e) {
+            logger.info("Error creating user - user with email \"{}\" already exists!", email);
+            return null;
+        }
+        final Map<String, Object> keys = keyHolder.getKeys();
+        user.setId((Long)keys.get("GENERATED_KEY"));
+        logger.info("User with email \"{}\" successful created", email);
+        return new UserDetails(user);
     }
+
+        private static class UserPstCreator implements PreparedStatementCreator {
+            private final User user;
+
+            public UserPstCreator(User user) {
+                this.user = user;
+            }
+
+            @Override
+            public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+                final String query = "INSERT INTO user (username, name, email, about, anonymous) VALUES (?,?,?,?,?);";
+                PreparedStatement pst = con.prepareStatement(query,
+                        Statement.RETURN_GENERATED_KEYS);
+                pst.setString(1, user.getUsername());
+                pst.setString(2, user.getName());
+                pst.setString(3, user.getEmail());
+                pst.setString(4, user.getAbout());
+                pst.setString(5, user.isAnonymous()? "1": "0");
+                return pst;
+            }
+        }
 
     @Override
     public UserDetailsExtended getDetails(String email) {
