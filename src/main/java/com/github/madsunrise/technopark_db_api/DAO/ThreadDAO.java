@@ -20,6 +20,7 @@ public interface ThreadDAO {
     ThreadDetailsExtended getDetails (long threadId);
     ThreadDetailsExtended getDetails (long threadId, List<String> related);
     void clear();
+    void createTable();
     long getAmount();
     long save (Thread thread);
     Long remove (long threadId);

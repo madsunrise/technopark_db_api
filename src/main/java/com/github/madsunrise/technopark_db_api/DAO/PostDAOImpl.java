@@ -30,6 +30,11 @@ public class PostDAOImpl implements PostDAO {
     }
 
     @Override
+    public void createTable() {
+
+    }
+
+    @Override
     public PostDetails create(LocalDateTime date, long threadId, String message, String userEmail, String forumShortName,
                               Long parent, boolean approved, boolean highlighted, boolean edited, boolean spam,
                               boolean deleted) {
@@ -106,7 +111,6 @@ public class PostDAOImpl implements PostDAO {
 
     @Override
     public void clear() {
-        logger.info("Truncate all posts success");
         idToPost.clear();
     }
 

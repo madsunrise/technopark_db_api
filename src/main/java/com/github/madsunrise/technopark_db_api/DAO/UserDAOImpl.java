@@ -232,7 +232,6 @@ public class UserDAOImpl implements UserDAO {
 
     @Override
     public void clear() {
-        logger.info("Truncate all users success");
         idToUser.clear();
         emailToUser.clear();
     }
@@ -339,5 +338,10 @@ public class UserDAOImpl implements UserDAO {
             }
             return u1.getName().compareTo(u2.getName());
         }
+    }
+
+    @Override
+    public void createTable() {
+
     }
 }

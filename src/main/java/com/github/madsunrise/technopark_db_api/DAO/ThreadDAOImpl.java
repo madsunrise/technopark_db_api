@@ -115,7 +115,6 @@ public class ThreadDAOImpl implements ThreadDAO {
 
     @Override
     public void clear() {
-        logger.info("Truncate all threads success");
         idToThread.clear();
     }
 
@@ -262,6 +261,11 @@ public class ThreadDAOImpl implements ThreadDAO {
         }
         // save
         return new ThreadDetailsExtended(thread);
+    }
+
+    @Override
+    public void createTable() {
+
     }
 
     @Override

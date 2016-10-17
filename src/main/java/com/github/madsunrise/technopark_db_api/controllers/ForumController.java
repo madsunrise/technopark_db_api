@@ -3,6 +3,7 @@ package com.github.madsunrise.technopark_db_api.controllers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.madsunrise.technopark_db_api.Codes;
 import com.github.madsunrise.technopark_db_api.DAO.ForumDAO;
+import com.github.madsunrise.technopark_db_api.DAO.ForumDAODataBaseImpl;
 import com.github.madsunrise.technopark_db_api.DAO.ForumDAOImpl;
 import com.github.madsunrise.technopark_db_api.response.*;
 import org.springframework.http.HttpStatus;
@@ -18,7 +19,11 @@ import java.util.List;
  */
 @RestController
 public class ForumController {
-    private final ForumDAO forumDAO = new ForumDAOImpl();
+    private final ForumDAODataBaseImpl forumDAO;
+
+    public ForumController(ForumDAODataBaseImpl forumDAO) {
+        this.forumDAO = forumDAO;
+    }
 
 
     @RequestMapping(path = "/db/api/forum/create", method = RequestMethod.POST)

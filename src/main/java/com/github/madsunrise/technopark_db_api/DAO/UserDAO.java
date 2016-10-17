@@ -23,6 +23,7 @@ public interface UserDAO {
     List<UserDetailsExtended> getFollowees(String email, Integer limit, String order, Integer sinceId);
     UserDetailsExtended updateProfile (String email, String name, String about);
     void clear();
+    void createTable();
     long getAmount();
     Long subscribe (long threadId, String email);
     Long unsubscribe (long threadId, String email);

@@ -17,6 +17,13 @@ public class MainController {
     private final ThreadDAO threadDAO = new ThreadDAOImpl();
     private final PostDAO postDAO = new PostDAOImpl();
 
+    private final MainService mainService;
+
+    public MainController(MainService mainService) {
+        this.mainService = mainService;
+    }
+
+
 
     @RequestMapping(path = "/db/api/clear", method = RequestMethod.POST)
     @ResponseBody
@@ -26,6 +33,8 @@ public class MainController {
         threadDAO.clear();
         forumDAO.clear();
         userDAO.clear();
+
+        mainService.clear();
         return new CustomResponse<>(Codes.OK, "OK");
     }
 

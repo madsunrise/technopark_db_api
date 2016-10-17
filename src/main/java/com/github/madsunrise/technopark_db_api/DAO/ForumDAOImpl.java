@@ -28,6 +28,11 @@ public class ForumDAOImpl implements ForumDAO {
     }
 
     @Override
+    public void createTable() {
+
+    }
+
+    @Override
     public ForumDetails create(String name, String shortName, String userEmail) {
         Forum forum = getByShortName(shortName);
         if (forum != null) {
@@ -70,7 +75,6 @@ public class ForumDAOImpl implements ForumDAO {
 
     @Override
     public void clear() {
-        logger.info("Truncate all forums success");
         shortNameToForum.clear();
     }
 

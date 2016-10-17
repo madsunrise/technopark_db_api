@@ -18,6 +18,7 @@ public interface PostDAO {
                        boolean delete);
     PostDetailsExtended getDetails(long id, List<String> related);
     void clear();
+    void createTable();
     long getAmount();
     List<PostDetailsExtended> getPostsByForum(String forumShortName,
                                               LocalDateTime since, Integer limit, String order);

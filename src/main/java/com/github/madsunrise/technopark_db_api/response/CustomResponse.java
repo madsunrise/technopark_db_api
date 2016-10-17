@@ -1,6 +1,5 @@
 package com.github.madsunrise.technopark_db_api.response;
 
-import org.json.JSONObject;
 
 /**
  * Created by ivan on 08.10.16.

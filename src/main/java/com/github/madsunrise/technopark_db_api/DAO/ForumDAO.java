@@ -18,6 +18,7 @@ public interface ForumDAO {
     ForumDetails getDetails(String shortName);
     ForumDetails getDetails(String shortName, String related);
     void clear();
+    void createTable();
     long getAmount();
     List<PostDetailsExtended> getPosts(String shortName, LocalDateTime since,
                                         Integer limit, String order, List<String> related);
