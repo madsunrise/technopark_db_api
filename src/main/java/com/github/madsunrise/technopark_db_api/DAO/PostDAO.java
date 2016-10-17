@@ -15,7 +15,8 @@ public interface PostDAO {
     Post getById(long id);
     PostDetails create(LocalDateTime date, long threadId, String message, String userEmail, String forumShortName,
                        Long parent, boolean approved, boolean highlighted, boolean edited, boolean spam,
-                       boolean delete);
+                       boolean deleted);
+    PostDetailsExtended getDetails(long id);
     PostDetailsExtended getDetails(long id, List<String> related);
     void clear();
     void createTable();

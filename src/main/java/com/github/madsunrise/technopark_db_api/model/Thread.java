@@ -23,7 +23,6 @@ public class Thread {
     private boolean deleted;
     private int likes;
     private int dislikes;
-    private int points;
     private int posts;
 
     private static final AtomicLong ID_GENETATOR = new AtomicLong(0);
@@ -52,9 +51,6 @@ public class Thread {
         return title;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
 
     public String getMessage() {
         return message;
@@ -148,7 +144,7 @@ public class Thread {
 
 
     public int getPoints() {
-        return points;
+        return likes - dislikes;
     }
 
 
@@ -172,10 +168,16 @@ public class Thread {
 
     public void like() {
         likes++;
-        points++;
     }
     public void dislike() {
         dislikes++;
-        points--;
+    }
+
+    public void setLikes(int likes) {
+        this.likes = likes;
+    }
+
+    public void setDislikes(int dislikes) {
+        this.dislikes = dislikes;
     }
 }

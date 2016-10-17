@@ -72,7 +72,7 @@ public class User {
         this.about = about;
     }
 
-    public boolean isAnonymous() {
+    public Boolean isAnonymous() {
         return anonymous;
     }
 
@@ -89,7 +89,17 @@ public class User {
     }
 
 
+    public void setFollowers(Set<String> followers) {
+        this.followers = followers;
+    }
 
+    public void setFollowing(Set<String> following) {
+        this.following = following;
+    }
+
+    public void setSubscriptions(Set<Long> subscriptions) {
+        this.subscriptions = subscriptions;
+    }
 
     public Set<Long> getSubscriptions() {
         return subscriptions;

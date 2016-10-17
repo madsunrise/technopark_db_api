@@ -16,7 +16,7 @@ public interface ForumDAO {
     Forum getByShortName (String shortName);
     ForumDetails create(String name, String shortName, String user);
     ForumDetails getDetails(String shortName);
-    ForumDetails getDetails(String shortName, String related);
+    ForumDetails getDetails(String shortName, List<String> related);
     void clear();
     void createTable();
     long getAmount();

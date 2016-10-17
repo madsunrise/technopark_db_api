@@ -20,7 +20,7 @@ public class UserDAOImpl implements UserDAO {
     private static final Logger logger = LoggerFactory.getLogger(ForumDAOImpl.class.getName());
 
 
-    @Override
+
     public User getById(Long id) {
         final User user = idToUser.get(id);
         if (user == null) {
@@ -42,16 +42,19 @@ public class UserDAOImpl implements UserDAO {
 
     @Override
     public UserDetails create(String username, String name, String email, String about, boolean anonymous) {
+        return null;
+    }
+
+    public UserDetails create(String username, String name, String email, String about, boolean anonymous, long id) {
         User user = emailToUser.get(email);
         if (user != null) {
-            logger.info("Error creating user - user with email \"{}\" already exists!", email);
             return null;
         }
 
         user = new User(username, name, email, about, anonymous);
+        user.setId(id);
         idToUser.put(user.getId(), user);
         emailToUser.put(user.getEmail(), user);
-        logger.info("User with email \"{}\" successful created", email);
         return new UserDetails(user);
     }
 
@@ -60,10 +63,8 @@ public class UserDAOImpl implements UserDAO {
     public UserDetailsExtended getDetails(String email) {
         final User user = emailToUser.get(email);
         if (user == null) {
-            logger.info("Error getting user details - user with email \"{}\" does not exist!", email);
             return null;
         }
-        logger.info("Getting user \"{}\" details is success", email);
         return new UserDetailsExtended(user);
     }
 
@@ -224,8 +225,6 @@ public class UserDAOImpl implements UserDAO {
 
         emailToUser.put(email, user);
         idToUser.put(user.getId(), user);
-
-        logger.info("Successful updated profile user with email \"{}\"", email);
         return new UserDetailsExtended(user);
     }
 
@@ -245,7 +244,6 @@ public class UserDAOImpl implements UserDAO {
     public Long subscribe(long threadId, String email) {
         final User user = emailToUser.get(email);
         if (user == null) {
-            logger.info("Error subscribing - user with email \"{}\" does not exist!", email);
             return null;
         }
         user.subscribe(threadId);

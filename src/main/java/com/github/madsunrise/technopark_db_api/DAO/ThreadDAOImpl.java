@@ -21,6 +21,11 @@ public class ThreadDAOImpl implements ThreadDAO {
     private static final Logger logger = LoggerFactory.getLogger(ThreadDAOImpl.class.getName());
 
     @Override
+    public void addPost(long threadId) {
+
+    }
+
+    @Override
     public Thread getById(long id) {
         return idToThread.get(id);
     }

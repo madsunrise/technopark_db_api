@@ -57,14 +57,14 @@ public class ForumDAOImpl implements ForumDAO {
     }
 
     @Override
-    public ForumDetails getDetails(String shortName, String related) {
+    public ForumDetails getDetails(String shortName, List<String> related) {
         final Forum forum = getByShortName(shortName);
         if (forum == null) {
             logger.info("Error getting forum details because forum \"{}\": does not exist!", shortName);
             return null;
         }
         logger.info("Getting forum details \"{}\" is success", shortName);
-        if (related != null && related.equals("user")) {
+        if (related != null && related.contains("user")) {
             User user = new UserDAOImpl().getByEmail(forum.getUser());
             UserDetailsExtended userDetails = new UserDetailsExtended(user);
             return new ForumDetails<>(forum.getId(), forum.getName(), forum.getShortName(), userDetails);

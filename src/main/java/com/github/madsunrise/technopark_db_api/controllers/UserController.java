@@ -3,6 +3,7 @@ package com.github.madsunrise.technopark_db_api.controllers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.madsunrise.technopark_db_api.Codes;
 import com.github.madsunrise.technopark_db_api.DAO.UserDAO;
+import com.github.madsunrise.technopark_db_api.DAO.UserDAODataBaseImpl;
 import com.github.madsunrise.technopark_db_api.DAO.UserDAOImpl;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.UserDetails;
@@ -23,8 +24,13 @@ import java.util.List;
 
 @RestController
 public class UserController {
-    private final UserDAO userDAO = new UserDAOImpl();
 
+
+    private final UserDAO userDAODataBase;
+
+    public UserController(UserDAODataBaseImpl userDAODataBase) {
+        this.userDAODataBase = userDAODataBase;
+    }
 
     @RequestMapping(path = "/db/api/user/create", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
@@ -32,11 +38,14 @@ public class UserController {
         if (StringUtils.isEmpty(request.email)) {
             return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
         }
-        final UserDetails result = userDAO.create(request.username,
+
+        final UserDetails result = userDAODataBase.create(request.username,
                 request.name, request.email, request.about, request.anonymous);
+
         if (result == null) {
             return new CustomResponse<>(Codes.USER_EXISTS, "User exists");
         }
+
         return new CustomResponse<>(Codes.OK, result);
     }
 
@@ -44,7 +53,7 @@ public class UserController {
     @RequestMapping(path = "/db/api/user/details", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse details(@RequestParam("user") String email) {
-        final UserDetailsExtended result = userDAO.getDetails(email);
+        final UserDetailsExtended result = userDAODataBase.getDetails(email);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
         }
@@ -60,7 +69,8 @@ public class UserController {
             return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
         }
 
-        final UserDetailsExtended result = userDAO.updateProfile(request.email, request.name, request.about);
+        final UserDetailsExtended result = userDAODataBase.updateProfile(request.email, request.name, request.about);
+
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
         }
@@ -77,7 +87,7 @@ public class UserController {
             return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
         }
 
-        final UserDetailsExtended result = userDAO.follow(request.follower, request.followee);
+        final UserDetailsExtended result = userDAODataBase.follow(request.follower, request.followee);
         if (result == null) {
             return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
         }
@@ -92,7 +102,7 @@ public class UserController {
             return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
         }
 
-        final UserDetailsExtended result = userDAO.unfollow(request.follower, request.followee);
+        final UserDetailsExtended result = userDAODataBase.unfollow(request.follower, request.followee);
         if (result == null) {
             return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
         }
@@ -108,7 +118,7 @@ public class UserController {
                                         @RequestParam(value = "limit", required = false) Integer limit,
                                         @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
                                         @RequestParam(value = "since_id", required = false) Integer sinceId){
-        final List<UserDetailsExtended> result = userDAO.getFollowers(email, limit, order, sinceId);
+        final List<UserDetailsExtended> result = userDAODataBase.getFollowers(email, limit, order, sinceId);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
         }
@@ -122,7 +132,7 @@ public class UserController {
                                         @RequestParam(value = "limit", required = false) Integer limit,
                                         @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
                                         @RequestParam(value = "since_id", required = false) Integer sinceId){
-        final List<UserDetailsExtended> result = userDAO.getFollowees(email, limit, order, sinceId);
+        final List<UserDetailsExtended> result = userDAODataBase.getFollowees(email, limit, order, sinceId);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
         }
@@ -146,7 +156,7 @@ public class UserController {
             since = LocalDateTime.parse(sinceStr, formatter);
         }
 
-        final List<PostDetailsExtended> result = userDAO.getPosts(email, since, limit, order);
+        final List<PostDetailsExtended> result = userDAODataBase.getPosts(email, since, limit, order);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Not found");
         }

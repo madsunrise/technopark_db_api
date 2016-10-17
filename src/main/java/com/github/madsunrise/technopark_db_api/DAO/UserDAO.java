@@ -13,7 +13,6 @@ import java.util.List;
  * Created by ivan on 08.10.16.
  */
 public interface UserDAO {
-    User getById (Long id);
     User getByEmail (String email);
     UserDetails create(String username, String name, String email, String about, boolean anonymous);
     UserDetailsExtended getDetails (String email);

@@ -3,6 +3,7 @@ package com.github.madsunrise.technopark_db_api.controllers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.madsunrise.technopark_db_api.Codes;
 import com.github.madsunrise.technopark_db_api.DAO.PostDAO;
+import com.github.madsunrise.technopark_db_api.DAO.PostDAODataBaseImpl;
 import com.github.madsunrise.technopark_db_api.DAO.PostDAOImpl;
 import com.github.madsunrise.technopark_db_api.response.CustomResponse;
 import com.github.madsunrise.technopark_db_api.response.PostDetails;
@@ -20,7 +21,12 @@ import java.util.List;
  */
 @RestController
 public class PostController {
-    final private PostDAO postDAO = new PostDAOImpl();
+
+    private final PostDAODataBaseImpl postDAODataBase;
+
+    public PostController(PostDAODataBaseImpl postDAODataBase) {
+        this.postDAODataBase = postDAODataBase;
+    }
 
     @RequestMapping(path = "/db/api/post/create", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
@@ -32,12 +38,13 @@ public class PostController {
         }
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         final LocalDateTime date = LocalDateTime.parse(request.date, formatter);
-        final PostDetails<String, String, String> result = postDAO.create(date, request.thread, request.message,
+        final PostDetails<String, String, String> result = postDAODataBase.create(date, request.thread, request.message,
                 request.user, request.forum, request.parent, request.approved, request.highlighted, request.edited,
                 request.spam, request.deleted);
         if (result == null) {
             return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parameters");
         }
+
         return new CustomResponse<>(Codes.OK, result);
     }
 
@@ -46,7 +53,7 @@ public class PostController {
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse details(@RequestParam("post") int postId,
                                   @RequestParam(value = "related", required = false) List<String> array) {
-        final PostDetailsExtended result = postDAO.getDetails(postId, array);
+        final PostDetailsExtended result = postDAODataBase.getDetails(postId, array);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
         }
@@ -75,9 +82,9 @@ public class PostController {
 
         final List<PostDetailsExtended> result;
         if (forumShortName != null) {
-            result = postDAO.getPostsByForum(forumShortName, since, limit, order);
+            result = postDAODataBase.getPostsByForum(forumShortName, since, limit, order);
         } else {
-            result = postDAO.getPostsByThread(threadId, since, limit, order);
+            result = postDAODataBase.getPostsByThread(threadId, since, limit, order);
         }
 
         if (result == null) {
@@ -91,7 +98,7 @@ public class PostController {
     @RequestMapping(path = "/db/api/post/remove", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse remove(@RequestBody PostId postId) {
-        final Long id = postDAO.remove(postId.getPostId());
+        final Long id = postDAODataBase.remove(postId.getPostId());
         if (id == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Post not found");
         }
@@ -102,7 +109,7 @@ public class PostController {
     @RequestMapping(path = "/db/api/post/restore", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse restore(@RequestBody PostId postId) {
-        final Long id = postDAO.restore(postId.getPostId());
+        final Long id = postDAODataBase.restore(postId.getPostId());
         if (id == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Post not found");
         }
@@ -114,7 +121,7 @@ public class PostController {
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse vote(@RequestBody VoteRequest request) {
 
-        final PostDetailsExtended result = postDAO.vote(request.getPostId(), request.getVote());
+        final PostDetailsExtended result = postDAODataBase.vote(request.getPostId(), request.getVote());
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
         }
@@ -128,7 +135,7 @@ public class PostController {
             return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
         }
 
-        final PostDetailsExtended result = postDAO.update(request.postId, request.message);
+        final PostDetailsExtended result = postDAODataBase.update(request.postId, request.message);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Post not found");
         }

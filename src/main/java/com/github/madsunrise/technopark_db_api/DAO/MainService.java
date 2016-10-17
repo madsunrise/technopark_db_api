@@ -60,9 +60,11 @@ public class MainService {
     private void createFollowing() {
         final String createTable = "CREATE TABLE following (" +
                 "follower_id BIGINT NOT NULL," +
+                "follower_email VARCHAR(30) NOT NULL," +
                 "followee_id BIGINT NOT NULL," +
+                "followee_email VARCHAR(30) NOT NULL," +
                 "FOREIGN KEY (follower_id) REFERENCES user(id)," +
-                "FOREIGN KEY (followee_id) REFERENCES thread(id)," +
+                "FOREIGN KEY (followee_id) REFERENCES user(id)," +
                 "PRIMARY KEY (follower_id, followee_id));";
         template.execute(createTable);
     }

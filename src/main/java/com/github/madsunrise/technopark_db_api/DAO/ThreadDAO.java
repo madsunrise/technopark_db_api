@@ -23,6 +23,7 @@ public interface ThreadDAO {
     void createTable();
     long getAmount();
     long save (Thread thread);
+    void addPost(long threadId);
     Long remove (long threadId);
     Long restore (long threadId);
     Long subscribe (long threadId, String userEmail);

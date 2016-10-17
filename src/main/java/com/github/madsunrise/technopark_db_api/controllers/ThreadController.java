@@ -3,6 +3,7 @@ package com.github.madsunrise.technopark_db_api.controllers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.madsunrise.technopark_db_api.Codes;
 import com.github.madsunrise.technopark_db_api.DAO.ThreadDAO;
+import com.github.madsunrise.technopark_db_api.DAO.ThreadDAODataBaseImpl;
 import com.github.madsunrise.technopark_db_api.DAO.ThreadDAOImpl;
 import com.github.madsunrise.technopark_db_api.response.CustomResponse;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
@@ -21,8 +22,12 @@ import java.util.List;
  */
 @RestController
 public class ThreadController {
-    private final ThreadDAO threadDAO = new ThreadDAOImpl();
 
+    private final ThreadDAO threadDAODataBase;
+
+    public ThreadController(ThreadDAODataBaseImpl threadDAODataBase) {
+        this.threadDAODataBase = threadDAODataBase;
+    }
 
     @RequestMapping(path = "/db/api/thread/create", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
@@ -36,11 +41,12 @@ public class ThreadController {
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         final LocalDateTime dateTime = LocalDateTime.parse(request.date, formatter);
 
-        final ThreadDetails result = threadDAO.create(request.forum, request.title,
+        final ThreadDetails result = threadDAODataBase.create(request.forum, request.title,
                 request.closed, request.user, dateTime, request.message, request.slug, request.deleted);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
         }
+
         return new CustomResponse<>(Codes.OK, result);
     }
 
@@ -70,7 +76,7 @@ public class ThreadController {
             }
         }
 
-        final ThreadDetailsExtended result = threadDAO.getDetails(threadId, related);
+        final ThreadDetailsExtended result = threadDAODataBase.getDetails(threadId, related);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
         }
@@ -81,7 +87,7 @@ public class ThreadController {
     @RequestMapping(path = "/db/api/thread/close", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse close(@RequestBody ThreadId request) {
-        final Long id = threadDAO.close(request.getThreadId());
+        final Long id = threadDAODataBase.close(request.getThreadId());
 
         if (id == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Thread not found");
@@ -93,7 +99,7 @@ public class ThreadController {
     @RequestMapping(path = "/db/api/thread/open", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse open(@RequestBody ThreadId request) {
-        final Long id = threadDAO.open(request.getThreadId());
+        final Long id = threadDAODataBase.open(request.getThreadId());
 
         if (id == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Thread not found");
@@ -107,7 +113,7 @@ public class ThreadController {
     @RequestMapping(path = "/db/api/thread/remove", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse remove(@RequestBody ThreadId request) {
-        final Long id = threadDAO.remove(request.getThreadId());
+        final Long id = threadDAODataBase.remove(request.getThreadId());
         if (id == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Thread not found");
         }
@@ -118,7 +124,7 @@ public class ThreadController {
     @RequestMapping(path = "/db/api/thread/restore", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse restore(@RequestBody ThreadId request) {
-        final Long id = threadDAO.restore(request.getThreadId());
+        final Long id = threadDAODataBase.restore(request.getThreadId());
         if (id == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Thread not found");
         }
@@ -136,10 +142,11 @@ public class ThreadController {
         if (StringUtils.isEmpty(request.getUserEmail())) {
             return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
         }
-        final Long id = threadDAO.subscribe(request.getThreadId(), request.getUserEmail());
+        final Long id = threadDAODataBase.subscribe(request.getThreadId(), request.getUserEmail());
         if (id == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Thread or user not found");
         }
+        threadDAODataBase.subscribe(request.getThreadId(), request.getUserEmail());
         final SubscribeBody result = new SubscribeBody(id, request.getUserEmail());
         return new CustomResponse<>(Codes.OK, result);
     }
@@ -151,7 +158,7 @@ public class ThreadController {
         if (StringUtils.isEmpty(request.getUserEmail())) {
             return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
         }
-        final Long id = threadDAO.unsubscribe(request.getThreadId(), request.getUserEmail());
+        final Long id = threadDAODataBase.unsubscribe(request.getThreadId(), request.getUserEmail());
         if (id == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Thread or user not found");
         }
@@ -174,7 +181,7 @@ public class ThreadController {
             since = LocalDateTime.parse(sinceStr, formatter);
         }
 
-        final List<PostDetailsExtended> result = threadDAO.getPosts(threadId, since, limit, order, sort);
+        final List<PostDetailsExtended> result = threadDAODataBase.getPosts(threadId, since, limit, order, sort);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Not found");
         }
@@ -185,7 +192,7 @@ public class ThreadController {
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse vote(@RequestBody VoteRequest request) {
 
-        final ThreadDetailsExtended result = threadDAO.vote(request.getThreadId(), request.getVote());
+        final ThreadDetailsExtended result = threadDAODataBase.vote(request.getThreadId(), request.getVote());
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
         }
@@ -200,7 +207,7 @@ public class ThreadController {
             return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
         }
 
-        final ThreadDetailsExtended result = threadDAO.update(request.threadId, request.message, request.slug);
+        final ThreadDetailsExtended result = threadDAODataBase.update(request.threadId, request.message, request.slug);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
         }
@@ -227,9 +234,9 @@ public class ThreadController {
 
         final List<ThreadDetailsExtended> result;
         if (!StringUtils.isEmpty(forumShortName)) {
-            result = threadDAO.getThreadsByForum(forumShortName, since, limit, order);
+            result = threadDAODataBase.getThreadsByForum(forumShortName, since, limit, order);
         } else {
-            result = threadDAO.getThreadsByUser(userEmail, since, limit, order);
+            result = threadDAODataBase.getThreadsByUser(userEmail, since, limit, order);
         }
 
         if (result == null) {

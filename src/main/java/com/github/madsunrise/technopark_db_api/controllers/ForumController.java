@@ -19,10 +19,11 @@ import java.util.List;
  */
 @RestController
 public class ForumController {
-    private final ForumDAODataBaseImpl forumDAO;
+    private final ForumDAODataBaseImpl forumDAODataBase;
+    private final ForumDAO forumDAO = new ForumDAOImpl();
 
-    public ForumController(ForumDAODataBaseImpl forumDAO) {
-        this.forumDAO = forumDAO;
+    public ForumController(ForumDAODataBaseImpl forumDAODataBase) {
+        this.forumDAODataBase = forumDAODataBase;
     }
 
 
@@ -34,10 +35,11 @@ public class ForumController {
                 StringUtils.isEmpty(request.shortName) || StringUtils.isEmpty(request.user)) {
             return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
         }
-        final ForumDetails result = forumDAO.create(request.name, request.shortName, request.user);
+        final ForumDetails result = forumDAODataBase.create(request.name, request.shortName, request.user);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
         }
+        //forumDAO.create(request.name, request.shortName, request.user);
         return new CustomResponse<>(Codes.OK, result);
     }
 
@@ -46,12 +48,12 @@ public class ForumController {
     @ResponseBody
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse details(@RequestParam(value = "forum") String shortName,
-                                  @RequestParam(value = "related", required = false) String related) {
+                                  @RequestParam(value = "related", required = false) List<String> related) {
         if (StringUtils.isEmpty(shortName)) {
             return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
         }
 
-        final ForumDetails result = forumDAO.getDetails(shortName, related);
+        final ForumDetails result = forumDAODataBase.getDetails(shortName, related);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Forum not found");
         }

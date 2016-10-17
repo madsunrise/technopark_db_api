@@ -7,6 +7,7 @@ import com.github.madsunrise.technopark_db_api.model.User;
 import com.github.madsunrise.technopark_db_api.response.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -22,6 +23,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PostDAOImpl implements PostDAO {
     private static final Map<Long, Post> idToPost = new ConcurrentHashMap<>();
     private static final Logger logger = LoggerFactory.getLogger(ThreadDAOImpl.class.getName());
+
+
+
+
 
 
     @Override
@@ -107,6 +112,11 @@ public class PostDAOImpl implements PostDAO {
 
         logger.info("Getting post (ID={}) details is success", id);
         return result;
+    }
+
+    @Override
+    public PostDetailsExtended getDetails(long id) {
+        return this.getDetails(id, null);
     }
 
     @Override
