@@ -418,14 +418,14 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
     }
 
 
-
+    @Override
     public List<ThreadDetailsExtended> getThreadsByForum(String forumShortName, String order, List<String> related) {
         final String query = "SELECT * FROM thread WHERE forum=? ORDER BY date " + order + ';';
         final List<Thread> threads = template.query(query, threadMapper, forumShortName);
         return makeDetailsWithRelations(threads, related);
     }
 
-
+    @Override
     public List<ThreadDetailsExtended> getThreadsByForum(String forumShortName,
                                                          LocalDateTime since, String order, List<String> related) {
         final String query = "SELECT * FROM thread WHERE forum=? AND date >= ? ORDER BY date " + order + ';';
@@ -433,7 +433,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         return makeDetailsWithRelations(threads, related);
     }
 
-
+    @Override
     public List<ThreadDetailsExtended> getThreadsByForum(String forumShortName,
                                                          Integer limit, String order, List<String> related) {
         final String query = "SELECT * FROM thread WHERE forum=? ORDER BY date " + order + " LIMIT ?;";
@@ -471,36 +471,34 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         return result;
     }
 
-
-
-
-
-
-
-
-
+    @Override
+    public List<ThreadDetailsExtended> getThreadsByUser(String userEmail, String order) {
+        final String query = "SELECT * FROM thread WHERE user=? ORDER BY date " + order + ';';
+        final List<Thread> threads = template.query(query, threadMapper, userEmail);
+        return makeDetailsWithRelations(threads, null);
+    }
 
     @Override
-    public List<ThreadDetailsExtended> getThreadsByForum(String forumShortName, LocalDateTime since, Integer limit, String order) {
-        return null;
+    public List<ThreadDetailsExtended> getThreadsByUser(String userEmail, LocalDateTime since, String order) {
+        final String query = "SELECT * FROM thread WHERE user=? AND date >= ? ORDER BY date " + order + ';';
+        final List<Thread> threads = template.query(query, threadMapper, userEmail, since);
+        return makeDetailsWithRelations(threads, null);
+    }
+
+    @Override
+    public List<ThreadDetailsExtended> getThreadsByUser(String userEmail, Integer limit, String order) {
+        final String query = "SELECT * FROM thread WHERE user=? ORDER BY date " + order + " LIMIT ?;";
+        final List<Thread> threads = template.query(query, threadMapper, userEmail, limit);
+        return makeDetailsWithRelations(threads, null);
     }
 
     @Override
     public List<ThreadDetailsExtended> getThreadsByUser(String userEmail, LocalDateTime since, Integer limit, String order) {
-        return null;
+        final String query = "SELECT * FROM thread WHERE user=? AND date >= ? ORDER BY date " + order + " LIMIT ?;";
+        final List<Thread> threads = template.query(query, threadMapper, userEmail, since, limit);
+        return makeDetailsWithRelations(threads, null);
     }
 
-
-
-    static class DateComparator implements Comparator<ThreadDetailsExtended> {
-        @Override
-        public int compare(ThreadDetailsExtended t1, ThreadDetailsExtended t2) {
-            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            final LocalDateTime d1 = LocalDateTime.parse(t1.getDate(), formatter);
-            final LocalDateTime d2 = LocalDateTime.parse(t2.getDate(), formatter);
-            return d1.compareTo(d2);
-        }
-    }
 
     static class PathComparatorAsc implements Comparator<PostDetailsExtended> {
         @Override

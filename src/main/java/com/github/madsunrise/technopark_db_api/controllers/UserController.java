@@ -1,13 +1,11 @@
 package com.github.madsunrise.technopark_db_api.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.madsunrise.technopark_db_api.Codes;
 import com.github.madsunrise.technopark_db_api.DAO.UserDAO;
 import com.github.madsunrise.technopark_db_api.DAO.UserDAODataBaseImpl;
-import com.github.madsunrise.technopark_db_api.DAO.UserDAOImpl;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.UserDetails;
-import com.github.madsunrise.technopark_db_api.response.CustomResponse;
+import com.github.madsunrise.technopark_db_api.response.Result;
 
 import com.github.madsunrise.technopark_db_api.response.UserDetailsExtended;
 import org.springframework.http.HttpStatus;
@@ -24,8 +22,7 @@ import java.util.List;
 
 @RestController
 public class UserController {
-
-
+    
     private final UserDAO userDAODataBase;
 
     public UserController(UserDAODataBaseImpl userDAODataBase) {
@@ -34,47 +31,47 @@ public class UserController {
 
     @RequestMapping(path = "/db/api/user/create", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse create(@RequestBody CreateUser request) {
+    public Result create(@RequestBody CreateUser request) {
         if (StringUtils.isEmpty(request.email)) {
-            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+            return Result.badRequest();
         }
 
         final UserDetails result = userDAODataBase.create(request.username,
                 request.name, request.email, request.about, request.anonymous);
 
         if (result == null) {
-            return new CustomResponse<>(Codes.USER_EXISTS, "User exists");
+            return new Result<>(Result.USER_ALREADY_EXISTS, "User exists");
         }
 
-        return new CustomResponse<>(Codes.OK, result);
+        return Result.ok(result);
     }
 
 
     @RequestMapping(path = "/db/api/user/details", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse details(@RequestParam("user") String email) {
+    public Result details(@RequestParam("user") String email) {
         final UserDetailsExtended result = userDAODataBase.getDetails(email);
         if (result == null) {
-            return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
+            return Result.notFound();
         }
-        return new CustomResponse<>(Codes.OK, result);
+        return Result.ok(result);
     }
 
 
     @RequestMapping(path = "/db/api/user/updateProfile", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse updateProfile(@RequestBody UpdateUser request) {
+    public Result updateProfile(@RequestBody UpdateUser request) {
         if (StringUtils.isEmpty(request.name) || StringUtils.isEmpty(request.email)
                 || StringUtils.isEmpty(request.about)) {
-            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+            return Result.badRequest();
         }
 
         final UserDetailsExtended result = userDAODataBase.updateProfile(request.email, request.name, request.about);
 
         if (result == null) {
-            return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
+            return Result.notFound();
         }
-        return new CustomResponse<>(Codes.OK, result);
+        return Result.ok(result);
     }
 
 
@@ -82,31 +79,31 @@ public class UserController {
 
     @RequestMapping(path = "/db/api/user/follow", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse follow(@RequestBody FollowRequest request) {
+    public Result follow(@RequestBody FollowRequest request) {
         if (StringUtils.isEmpty(request.follower) || StringUtils.isEmpty(request.followee)) {
-            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+            return Result.badRequest();
         }
 
         final UserDetailsExtended result = userDAODataBase.follow(request.follower, request.followee);
         if (result == null) {
-            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+            return Result.badRequest();
         }
-        return new CustomResponse<>(Codes.OK, result);
+        return Result.ok(result);
     }
 
 
     @RequestMapping(path = "/db/api/user/unfollow", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse unfollow(@RequestBody FollowRequest request) {
+    public Result unfollow(@RequestBody FollowRequest request) {
         if (StringUtils.isEmpty(request.follower) || StringUtils.isEmpty(request.followee)) {
-            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+            return Result.badRequest();
         }
 
         final UserDetailsExtended result = userDAODataBase.unfollow(request.follower, request.followee);
         if (result == null) {
-            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+            return Result.badRequest();
         }
-        return new CustomResponse<>(Codes.OK, result);
+        return Result.ok(result);
     }
 
 
@@ -114,10 +111,10 @@ public class UserController {
 
     @RequestMapping(path = "/db/api/user/listFollowers", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse listFollowers(@RequestParam("user") String email,
-                                        @RequestParam(value = "limit", required = false) Integer limit,
-                                        @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
-                                        @RequestParam(value = "since_id", required = false) Integer sinceId){
+    public Result listFollowers(@RequestParam("user") String email,
+                                @RequestParam(value = "limit", required = false) Integer limit,
+                                @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
+                                @RequestParam(value = "since_id", required = false) Integer sinceId){
         final List<UserDetailsExtended> result;
         if (sinceId == null) {
             if (limit == null) {
@@ -136,18 +133,18 @@ public class UserController {
             }
         }
         if (result == null) {
-            return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
+            return Result.notFound();
         }
-        return new CustomResponse<>(Codes.OK, result);
+        return Result.ok(result);
     }
 
 
     @RequestMapping(path = "/db/api/user/listFollowing", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse listFollowing(@RequestParam("user") String email,
-                                        @RequestParam(value = "limit", required = false) Integer limit,
-                                        @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
-                                        @RequestParam(value = "since_id", required = false) Integer sinceId){
+    public Result listFollowing(@RequestParam("user") String email,
+                                @RequestParam(value = "limit", required = false) Integer limit,
+                                @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
+                                @RequestParam(value = "since_id", required = false) Integer sinceId){
         final List<UserDetailsExtended> result;
         if (sinceId == null) {
             if (limit == null) {
@@ -166,9 +163,10 @@ public class UserController {
             }
         }
         if (result == null) {
-            return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
+            return Result.notFound();
+
         }
-        return new CustomResponse<>(Codes.OK, result);
+        return Result.ok(result);
     }
 
 
@@ -177,10 +175,10 @@ public class UserController {
 
     @RequestMapping(path = "/db/api/user/listPosts", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse listPosts(@RequestParam("user") String email,
-                                        @RequestParam(value = "limit", required = false) Integer limit,
-                                        @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
-                                        @RequestParam(value = "since", required = false) String sinceStr){
+    public Result listPosts(@RequestParam("user") String email,
+                            @RequestParam(value = "limit", required = false) Integer limit,
+                            @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
+                            @RequestParam(value = "since", required = false) String sinceStr){
 
         LocalDateTime since = null;
         if (!StringUtils.isEmpty(sinceStr)) {
@@ -190,9 +188,9 @@ public class UserController {
 
         final List<PostDetailsExtended> result = userDAODataBase.getPosts(email, since, limit, order);
         if (result == null) {
-            return new CustomResponse<>(Codes.NOT_FOUND, "Not found");
+            return Result.notFound();
         }
-        return new CustomResponse<>(Codes.OK, result);
+        return Result.ok(result);
     }
 
 

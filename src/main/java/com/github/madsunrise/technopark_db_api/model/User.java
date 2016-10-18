@@ -1,8 +1,6 @@
 package com.github.madsunrise.technopark_db_api.model;
 
 
-import com.github.madsunrise.technopark_db_api.DAO.UserDAOImpl;
-
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 

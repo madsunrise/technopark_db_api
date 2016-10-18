@@ -4,7 +4,7 @@ package com.github.madsunrise.technopark_db_api.response;
 /**
  * Created by ivan on 08.10.16.
  */
-public final class CustomResponse<V> {
+public final class Result<V> {
     public static final int OK = 0;
     public static final int NOT_FOUND = 1;
     public static final int INVALID_REQUEST = 2;
@@ -16,7 +16,7 @@ public final class CustomResponse<V> {
         private final int code;
         private final V response;
 
-    public CustomResponse(int code, V response) {
+    public Result(int code, V response) {
         this.code = code;
         this.response = response;
     }
@@ -31,11 +31,15 @@ public final class CustomResponse<V> {
         return response;
     }
 
-    public static <V> CustomResponse<V> ok(V response) {
-        return new CustomResponse<V>(OK, response);
+    public static <V> Result<V> ok(V response) {
+        return new Result<V>(OK, response);
     }
 
-    public static CustomResponse<String> notFound() {
-        return new CustomResponse<>(NOT_FOUND, "Not found");
+    public static Result<String> notFound() {
+        return new Result<>(NOT_FOUND, "Not found");
+    }
+
+    public static Result<String> badRequest() {
+        return new Result<>(INVALID_REQUEST, "Bad request");
     }
 }

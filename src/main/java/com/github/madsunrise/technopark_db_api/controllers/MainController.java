@@ -1,8 +1,7 @@
 package com.github.madsunrise.technopark_db_api.controllers;
 
-import com.github.madsunrise.technopark_db_api.Codes;
 import com.github.madsunrise.technopark_db_api.DAO.*;
-import com.github.madsunrise.technopark_db_api.response.CustomResponse;
+import com.github.madsunrise.technopark_db_api.response.Result;
 import com.github.madsunrise.technopark_db_api.response.StatusResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -23,20 +22,20 @@ public class MainController {
     @RequestMapping(path = "/db/api/clear", method = RequestMethod.POST)
     @ResponseBody
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse details() {
+    public Result details() {
         mainService.clear();
-        return new CustomResponse<>(Codes.OK, "OK");
+        return Result.ok("Cleared");
     }
 
     @RequestMapping(path = "/db/api/status", method = RequestMethod.GET)
     @ResponseBody
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse status() {
-        long postCount = mainService.getPostAmount();
-        long threadCount = mainService.getThreadAmount();
-        long forumCount = mainService.getForumAmount();
-        long userCount = mainService.getUserAmount();
-        StatusResponse result = new StatusResponse(userCount, threadCount, forumCount, postCount);
-        return new CustomResponse<>(Codes.OK, result);
+    public Result status() {
+        final long postCount = mainService.getPostAmount();
+        final long threadCount = mainService.getThreadAmount();
+        final long forumCount = mainService.getForumAmount();
+        final long userCount = mainService.getUserAmount();
+        final StatusResponse result = new StatusResponse(userCount, threadCount, forumCount, postCount);
+        return Result.ok(result);
     }
 }

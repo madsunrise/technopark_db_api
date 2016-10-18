@@ -1,9 +1,8 @@
 package com.github.madsunrise.technopark_db_api.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.madsunrise.technopark_db_api.Codes;
 import com.github.madsunrise.technopark_db_api.DAO.*;
-import com.github.madsunrise.technopark_db_api.response.CustomResponse;
+import com.github.madsunrise.technopark_db_api.response.Result;
 import com.github.madsunrise.technopark_db_api.response.PostDetails;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import org.springframework.http.HttpStatus;
@@ -33,47 +32,48 @@ public class PostController {
 
     @RequestMapping(path = "/db/api/post/create", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse create(@RequestBody CreateRequest request) {
+    public Result create(@RequestBody CreateRequest request) {
         if (StringUtils.isEmpty(request.date) ||
                 StringUtils.isEmpty(request.message) || StringUtils.isEmpty(request.user)
                 || StringUtils.isEmpty(request.forum)) {
-            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+            return Result.badRequest();
         }
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         final LocalDateTime date = LocalDateTime.parse(request.date, formatter);
         final PostDetails<String, String, String> result = postDAODataBase.create(date, request.thread, request.message,
                 request.user, request.forum, request.parent, request.approved, request.highlighted, request.edited,
                 request.spam, request.deleted);
+
         if (result == null) {
-            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parameters");
+            return Result.badRequest();
         }
 
-        return new CustomResponse<>(Codes.OK, result);
+        return Result.ok(result);
     }
 
 
     @RequestMapping(path = "/db/api/post/details", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse details(@RequestParam("post") int postId,
-                                  @RequestParam(value = "related", required = false) List<String> array) {
+    public Result details(@RequestParam("post") int postId,
+                          @RequestParam(value = "related", required = false) List<String> array) {
         final PostDetailsExtended result = postDAODataBase.getDetails(postId, array);
         if (result == null) {
-            return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
+            return Result.notFound();
         }
-        return new CustomResponse<>(Codes.OK, result);
+        return Result.ok(result);
     }
 
 
     @RequestMapping(path = "/db/api/post/list/", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse list(@RequestParam(value = "forum", required = false) String forumShortName,
-                               @RequestParam(value = "thread", required = false) Long threadId,
-                               @RequestParam(value = "since", required = false) String sinceStr,
-                               @RequestParam(value = "limit", required = false) Integer limit,
-                               @RequestParam(value = "order", required = false, defaultValue = "desc") String order) {
+    public Result list(@RequestParam(value = "forum", required = false) String forumShortName,
+                       @RequestParam(value = "thread", required = false) Long threadId,
+                       @RequestParam(value = "since", required = false) String sinceStr,
+                       @RequestParam(value = "limit", required = false) Integer limit,
+                       @RequestParam(value = "order", required = false, defaultValue = "desc") String order) {
 
         if (StringUtils.isEmpty(forumShortName) && threadId == null) {
-            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+            return Result.badRequest();
         }
 
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -91,58 +91,58 @@ public class PostController {
         }
 
         if (result == null) {
-            return new CustomResponse<>(Codes.NOT_FOUND, "No posts");
+            return Result.notFound();
         }
 
-        return new CustomResponse<>(Codes.OK, result);
+        return Result.ok(result);
     }
 
 
     @RequestMapping(path = "/db/api/post/remove", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse remove(@RequestBody PostId postId) {
+    public Result remove(@RequestBody PostId postId) {
         final boolean success = postDAODataBase.remove(postId.getPostId());
         if (!success) {
-            return new CustomResponse<>(Codes.NOT_FOUND, "Post not found");
+            return Result.notFound();
         }
         final PostId result = new PostId(postId.getPostId());
-        return new CustomResponse<>(Codes.OK, result);
+        return Result.ok(result);
     }
 
     @RequestMapping(path = "/db/api/post/restore", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse restore(@RequestBody PostId postId) {
+    public Result restore(@RequestBody PostId postId) {
         final boolean success = postDAODataBase.restore(postId.getPostId());
         if (!success) {
-            return new CustomResponse<>(Codes.NOT_FOUND, "Post not found");
+            return Result.notFound();
         }
         final PostId result = new PostId(postId.getPostId());
-        return new CustomResponse<>(Codes.OK, result);
+        return Result.ok(result);
     }
 
     @RequestMapping(path = "/db/api/post/vote", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse vote(@RequestBody VoteRequest request) {
+    public Result vote(@RequestBody VoteRequest request) {
 
         final PostDetailsExtended result = postDAODataBase.vote(request.getPostId(), request.getVote());
         if (result == null) {
-            return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
+            return Result.notFound();
         }
-        return new CustomResponse<>(Codes.OK, result);
+        return Result.ok(result);
     }
 
     @RequestMapping(path = "/db/api/post/update", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public CustomResponse update(@RequestBody UpdateRequest request) {
+    public Result update(@RequestBody UpdateRequest request) {
         if (StringUtils.isEmpty(StringUtils.isEmpty(request.message))) {
-            return new CustomResponse<>(Codes.INVALID_REQUEST, "Bad parametres");
+            return Result.badRequest();
         }
 
         final PostDetailsExtended result = postDAODataBase.update(request.postId, request.message);
         if (result == null) {
-            return new CustomResponse<>(Codes.NOT_FOUND, "Post not found");
+            return Result.notFound();
         }
-        return new CustomResponse<>(Codes.OK, result);
+        return Result.ok(result);
     }
 
 

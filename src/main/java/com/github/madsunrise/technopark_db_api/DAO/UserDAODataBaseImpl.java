@@ -492,7 +492,7 @@ public class UserDAODataBaseImpl implements UserDAO {
 
 
     public List<UserDetailsExtended> getUsersByForum(String forumShortName, Long sinceId, String order) {
-        final String query = "SELECT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
+        final String query = "SELECT DISTINCT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
                 " FROM user u JOIN post p ON u.id = p.user_id JOIN forum f ON p.forum_id = f.id " +
                 " WHERE f.short_name = ? AND u.id >= ?  ORDER BY name " + order + ';';
         final List<User> users = template.query(query, userMapper, forumShortName, sinceId);
@@ -518,7 +518,7 @@ public class UserDAODataBaseImpl implements UserDAO {
 
 
     public List<UserDetailsExtended> getUsersByForum(String forumShortName, Integer limit, String order) {
-        final String query = "SELECT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
+        final String query = "SELECT DISTINCT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
                 " FROM user u JOIN post p ON u.id = p.user_id JOIN forum f ON p.forum_id = f.id " +
                 " WHERE f.short_name = ? ORDER BY name " + order + " LIMIT ?";
         final List<User> users = template.query(query, userMapper, forumShortName, limit);
@@ -544,8 +544,8 @@ public class UserDAODataBaseImpl implements UserDAO {
 
     @Override
     public List<UserDetailsExtended> getUsersByForum(String forumShortName, Long sinceId, Integer limit, String order) {
-        final String query = "SELECT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
-                " FROM user u JOIN post p ON u.id = p.user_id JOIN forum f ON p.forum_id = f.id " +
+        final String query = "SELECT DISTINCT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
+                " FROM user u JOIN post p ON u.id = p.user_id JOIN forum f ON p.forum_id = f.id" +
                 " WHERE f.short_name = ? AND u.id >= ?  ORDER BY name " + order + " LIMIT ?";
         final List<User> users = template.query(query, userMapper, forumShortName, sinceId, limit);
         final List<UserDetailsExtended> result = new ArrayList<>();
