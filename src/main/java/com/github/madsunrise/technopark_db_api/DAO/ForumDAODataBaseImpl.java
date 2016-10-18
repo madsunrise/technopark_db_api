@@ -170,7 +170,7 @@ public class ForumDAODataBaseImpl implements ForumDAO {
                 return postDAODataBase.getPostsByForum(shortName, order, related);
             }
             else {
-                return postDAODataBase.getPostsByForum(shortName, since, order, related);
+                return postDAODataBase.getPostsByForum(shortName, limit, order, related);
             }
         }
         else {

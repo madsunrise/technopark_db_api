@@ -6,6 +6,7 @@ import com.github.madsunrise.technopark_db_api.response.UserDetails;
 import com.github.madsunrise.technopark_db_api.response.UserDetailsExtended;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -35,6 +36,9 @@ public class UserDAODataBaseImpl implements UserDAO {
     public UserDAODataBaseImpl(JdbcTemplate template) {
         this.template = template;
     }
+
+    @Autowired
+    private PostDAODataBaseImpl postDAODataBase;
 
     @Override
     public void clear() {
@@ -255,7 +259,22 @@ public class UserDAODataBaseImpl implements UserDAO {
 
     @Override
     public List<PostDetailsExtended> getPosts(String email, LocalDateTime since, Integer limit, String order) {
-        return null;
+        if (since == null) {
+            if (limit == null) {
+                return postDAODataBase.getPostsByUser(email, order);
+            }
+            else {
+                return postDAODataBase.getPostsByUser(email, limit, order);
+            }
+        }
+        else {
+            if (limit == null) {
+                return postDAODataBase.getPostsByUser(email, since, order);
+            }
+            else {
+                return postDAODataBase.getPostsByUser(email, since, limit, order);
+            }
+        }
     }
 
     @Override

@@ -462,14 +462,38 @@ public class PostDAODataBaseImpl implements PostDAO {
 
 
 
+    public List<PostDetailsExtended> getPostsByUser(String userEmail, String order) {
+        final String query = "SELECT * FROM post WHERE user=? ORDER BY date " + order + ';';
+        return template.query(query, postDetailsExtMapper,
+                userEmail);
+    }
+
+    public List<PostDetailsExtended> getPostsByUser(String userEmail, LocalDateTime since, String order) {
+        final String query = "SELECT * FROM post WHERE user=? AND date >= ? ORDER BY date " + order + ';';
+        return template.query(query, postDetailsExtMapper,
+                userEmail, since);
+    }
 
 
+    public List<PostDetailsExtended> getPostsByUser(String userEmail, Integer limit, String order) {
+        final String query = "SELECT * FROM post WHERE user=? ORDER BY date " + order + " LIMIT ?";
+        return template.query(query, postDetailsExtMapper,
+                userEmail, limit);
+    }
 
 
     @Override
     public List<PostDetailsExtended> getPostsByUser(String userEmail, LocalDateTime since, Integer limit, String order) {
-        return null;
+        final String query = "SELECT * FROM post WHERE user=? AND date >= ? ORDER BY date " + order + " LIMIT ?;";
+        return template.query(query, postDetailsExtMapper,
+                userEmail, since, limit);
     }
+
+
+
+
+
+
 
     @Override
     public boolean remove(long postId) {
@@ -533,7 +557,14 @@ public class PostDAODataBaseImpl implements PostDAO {
 
     @Override
     public PostDetailsExtended update(long postId, String message) {
-        return null;
+        final String query = "UPDATE post SET message=? WHERE id=?;";
+        final int affectedRows = template.update(query, message, postId);
+        if (affectedRows == 0) {
+            logger.info("Error update post because post with ID={} does not exist!", postId);
+            return null;
+        }
+        final Post post = getById(postId);
+        return new PostDetailsExtended(post);
     }
 
 
@@ -581,10 +612,14 @@ public class PostDAODataBaseImpl implements PostDAO {
         final boolean spam = rs.getBoolean("spam");
         final boolean deleted = rs.getBoolean("deleted");
         final long id = rs.getLong("id");
+        final int likes = rs.getInt("likes");
+        final int dislikes = rs.getInt("dislikes");
         final Post post = new Post(message, date, threadId, user, userId, forum, forumId, parent,
                 approved, highlighted, edited, spam, deleted);
         post.setPath(path);
         post.setId(id);
+        post.setLikes(likes);
+        post.setDislikes(dislikes);
         PostDetailsExtended result = new PostDetailsExtended(post);
         result.setUser(user);
         result.setForum(forum);
