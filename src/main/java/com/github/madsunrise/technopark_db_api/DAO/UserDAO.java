@@ -18,8 +18,14 @@ public interface UserDAO {
     UserDetailsExtended getDetails (String email);
     UserDetailsExtended follow (String followerEmail, String followeeEmail);
     UserDetailsExtended unfollow (String followerEmail, String followeeEmail);
-    List<UserDetailsExtended> getFollowers (String email, Integer limit, String order, Integer sinceId);
-    List<UserDetailsExtended> getFollowees(String email, Integer limit, String order, Integer sinceId);
+    List<UserDetailsExtended> getFollowers (String email, String order);
+    List<UserDetailsExtended> getFollowers (String email, int sinceId, String order);
+    List<UserDetailsExtended> getFollowers (String email, String order, int limit);
+    List<UserDetailsExtended> getFollowers (String email, int sinceId, String order, int limit);
+    List<UserDetailsExtended> getFollowees(String email, String order);
+    List<UserDetailsExtended> getFollowees(String email, int sinceId, String order);
+    List<UserDetailsExtended> getFollowees(String email, String order, int limit);
+    List<UserDetailsExtended> getFollowees(String email, int sinceId, String order, int limit);
     UserDetailsExtended updateProfile (String email, String name, String about);
     void clear();
     void createTable();

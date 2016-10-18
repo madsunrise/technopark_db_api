@@ -98,7 +98,7 @@ public class UserDAOImpl implements UserDAO {
         return new UserDetailsExtended(follower);
     }
 
-    @Override
+
     public List<UserDetailsExtended> getFollowers(String email, Integer limit, String order, Integer sinceId) {
         final User user = getByEmail(email);
         if (user == null) {
@@ -153,7 +153,7 @@ public class UserDAOImpl implements UserDAO {
         return followers.subList(0, limit);
     }
 
-    @Override
+
     public List<UserDetailsExtended> getFollowees(String email, Integer limit, String order, Integer sinceId) {
         final User user = getByEmail(email);
         if (user == null) {
@@ -206,10 +206,45 @@ public class UserDAOImpl implements UserDAO {
         return followees.subList(0, limit);
     }
 
+    @Override
+    public List<UserDetailsExtended> getFollowers(String email, String order) {
+        return null;
+    }
 
+    @Override
+    public List<UserDetailsExtended> getFollowers(String email, int sinceId, String order) {
+        return null;
+    }
 
+    @Override
+    public List<UserDetailsExtended> getFollowers(String email, String order, int limit) {
+        return null;
+    }
 
+    @Override
+    public List<UserDetailsExtended> getFollowers(String email, int sinceId, String order, int limit) {
+        return null;
+    }
 
+    @Override
+    public List<UserDetailsExtended> getFollowees(String email, String order) {
+        return null;
+    }
+
+    @Override
+    public List<UserDetailsExtended> getFollowees(String email, int sinceId, String order) {
+        return null;
+    }
+
+    @Override
+    public List<UserDetailsExtended> getFollowees(String email, String order, int limit) {
+        return null;
+    }
+
+    @Override
+    public List<UserDetailsExtended> getFollowees(String email, int sinceId, String order, int limit) {
+        return null;
+    }
 
     @Override
     public UserDetailsExtended updateProfile(String email, String name, String about) {

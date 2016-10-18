@@ -118,7 +118,23 @@ public class UserController {
                                         @RequestParam(value = "limit", required = false) Integer limit,
                                         @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
                                         @RequestParam(value = "since_id", required = false) Integer sinceId){
-        final List<UserDetailsExtended> result = userDAODataBase.getFollowers(email, limit, order, sinceId);
+        final List<UserDetailsExtended> result;
+        if (sinceId == null) {
+            if (limit == null) {
+                result = userDAODataBase.getFollowers(email, order);
+            }
+            else {
+                result = userDAODataBase.getFollowers(email, order, limit);
+            }
+        }
+        else {
+            if (limit == null) {
+                result = userDAODataBase.getFollowers(email, sinceId, order);
+            }
+            else {
+                result = userDAODataBase.getFollowers(email, sinceId, order, limit);
+            }
+        }
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
         }
@@ -132,7 +148,23 @@ public class UserController {
                                         @RequestParam(value = "limit", required = false) Integer limit,
                                         @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
                                         @RequestParam(value = "since_id", required = false) Integer sinceId){
-        final List<UserDetailsExtended> result = userDAODataBase.getFollowees(email, limit, order, sinceId);
+        final List<UserDetailsExtended> result;
+        if (sinceId == null) {
+            if (limit == null) {
+                result = userDAODataBase.getFollowees(email, order);
+            }
+            else {
+                result = userDAODataBase.getFollowees(email, order, limit);
+            }
+        }
+        else {
+            if (limit == null) {
+                result = userDAODataBase.getFollowees(email, sinceId, order);
+            }
+            else {
+                result = userDAODataBase.getFollowees(email, sinceId, order, limit);
+            }
+        }
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "User not found");
         }
