@@ -106,7 +106,7 @@ public class ForumDAOImpl implements ForumDAO {
         return new ThreadDAOImpl().getThreadsByForum(shortName, since, limit, order, related);
     }
 
-    @Override
+
     public List<UserDetailsExtended> getUsers(String shortName, Long sinceId, Integer limit, String order) {
         final Forum forum = getByShortName(shortName);
         if (forum == null) {

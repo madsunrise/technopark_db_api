@@ -24,5 +24,5 @@ public interface ForumDAO {
                                         Integer limit, String order, List<String> related);
     List<ThreadDetailsExtended> getThreads(String shortName,LocalDateTime since,
                                            Integer limit, String order, List<String> related);
-    List<UserDetailsExtended> getUsers (String shortName, Long sinceId, Integer limit, String order);
+    List<UserDetailsExtended> getUsers(String shortName, Long sinceId, Integer limit, String order);
 }

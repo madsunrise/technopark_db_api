@@ -71,18 +71,8 @@ public class UserDAODataBaseImpl implements UserDAO {
     public User getByEmail(String email) {
         try {
             final User user = template.queryForObject(
-                    "SELECT * FROM user WHERE email = ?",
-                    (rs, rowNum) -> {
-                        final String username = rs.getString("username");
-                        final String name = rs.getString("name");
-                        final String eMail = rs.getString("email");
-                        final String about = rs.getString("about");
-                        final long id = rs.getLong("id");
-                        final boolean anonymous = rs.getBoolean("anonymous");
-                        final User result = new User(username, name, eMail, about, anonymous);
-                        result.setId(id);
-                        return result;
-                    }, email);
+                    "SELECT * FROM user WHERE email = ?", userMapper, email);
+
             final String getFollowers = "SELECT follower_email FROM following WHERE followee_id=?;";
             final List<String> followers = template.queryForList(getFollowers, String.class, user.getId());
 
@@ -212,16 +202,13 @@ public class UserDAODataBaseImpl implements UserDAO {
 
     @Override
     public UserDetailsExtended updateProfile(String email, String name, String about) {
-        final User user = getByEmail(email);
-        if (user == null) {
-            logger.info("Error updating user profile - user with email \"{}\" does not exist!", email);
+        final String query = "UPDATE user SET name = ?, about = ? WHERE email = ?;";
+        final int affectedRows = template.update(query, name, about, email);
+        if (affectedRows == 0) {
+            logger.info("Error update user profile because user with email {} does not exist!", email);
             return null;
         }
-        user.setName(name);
-        user.setAbout(about);
-        final String query = "UPDATE user SET name=?, about=? WHERE id=?;";
-        template.update(query, name, about, user.getId());
-        logger.info("Getting user \"{}\" details is success", email);
+        final User user = getByEmail(email);
         return new UserDetailsExtended(user);
     }
 
@@ -277,8 +264,62 @@ public class UserDAODataBaseImpl implements UserDAO {
         }
     }
 
+
+
+    public List<UserDetailsExtended> getUsersByForum(String forumShortName, String order) {
+        final String query = "SELECT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
+                " FROM user u JOIN forum f ON u.id = f.user_id" +
+                " WHERE f.short_name = ? ORDER BY name " + order + ';';
+        return template.query(query, userDetailsExtMapper, forumShortName);
+    }
+
+
+    public List<UserDetailsExtended> getUsersByForum(String forumShortName, Long sinceId, String order) {
+        final String query = "SELECT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
+                " FROM user u JOIN forum f ON u.id = f.user_id" +
+                " WHERE f.short_name = ? AND u.id >= ?  ORDER BY name " + order + ';';
+        return template.query(query, userDetailsExtMapper, forumShortName, sinceId);
+    }
+
+
+    public List<UserDetailsExtended> getUsersByForum(String forumShortName, Integer limit, String order) {
+        final String query = "SELECT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
+                " FROM user u JOIN forum f ON u.id = f.user_id" +
+                " WHERE f.short_name = ? ORDER BY name " + order + " LIMIT ?";
+        return template.query(query, userDetailsExtMapper, forumShortName, limit);
+    }
+
     @Override
     public List<UserDetailsExtended> getUsersByForum(String forumShortName, Long sinceId, Integer limit, String order) {
-        return null;
+        final String query = "SELECT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
+                " FROM user u JOIN forum f ON u.id = f.user_id" +
+                " WHERE f.short_name = ? AND u.id >= ?  ORDER BY name " + order + " LIMIT ?";
+        return template.query(query, userDetailsExtMapper, forumShortName, sinceId, limit);
     }
+
+
+    RowMapper<User> userMapper = (rs, rowNum) -> {
+        final String username = rs.getString("username");
+        final String name = rs.getString("name");
+        final String eMail = rs.getString("email");
+        final String about = rs.getString("about");
+        final long id = rs.getLong("id");
+        final boolean anonymous = rs.getBoolean("anonymous");
+        final User result = new User(username, name, eMail, about, anonymous);
+        result.setId(id);
+        return result;
+    };
+
+
+    RowMapper<UserDetailsExtended> userDetailsExtMapper = (rs, i) -> {
+        final String username = rs.getString("username");
+        final String name = rs.getString("name");
+        final String eMail = rs.getString("email");
+        final String about = rs.getString("about");
+        final long id = rs.getLong("id");
+        final boolean anonymous = rs.getBoolean("anonymous");
+        final User user = new User(username, name, eMail, about, anonymous);
+        user.setId(id);
+        return new UserDetailsExtended(user);
+    };
 }

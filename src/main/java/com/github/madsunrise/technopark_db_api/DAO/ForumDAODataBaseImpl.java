@@ -184,12 +184,43 @@ public class ForumDAODataBaseImpl implements ForumDAO {
     }
 
     @Override
-    public List<ThreadDetailsExtended> getThreads(String shortName, LocalDateTime since, Integer limit, String order, List<String> related) {
-        return null;
+    public List<ThreadDetailsExtended> getThreads(String shortName, LocalDateTime since,
+                                                  Integer limit, String order, List<String> related) {
+        if (since == null) {
+            if (limit == null) {
+                return threadDAODataBase.getThreadsByForum(shortName, order, related);
+            }
+            else {
+                return threadDAODataBase.getThreadsByForum(shortName, limit, order, related);
+            }
+        }
+        else {
+            if (limit == null) {
+                return threadDAODataBase.getThreadsByForum(shortName, since, order, related);
+            }
+            else {
+                return threadDAODataBase.getThreadsByForum(shortName, since, limit, order,related);
+            }
+        }
     }
 
     @Override
     public List<UserDetailsExtended> getUsers(String shortName, Long sinceId, Integer limit, String order) {
-        return null;
+        if (sinceId == null) {
+            if (limit == null) {
+                return userDAODataBase.getUsersByForum(shortName, order);
+            }
+            else {
+                return userDAODataBase.getUsersByForum(shortName, limit, order);
+            }
+        }
+        else {
+            if (limit == null) {
+                return userDAODataBase.getUsersByForum(shortName, sinceId, order);
+            }
+            else {
+                return userDAODataBase.getUsersByForum(shortName, sinceId, limit, order);
+            }
+        }
     }
 }
