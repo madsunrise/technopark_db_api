@@ -22,7 +22,7 @@ import java.util.List;
 
 @RestController
 public class UserController {
-    
+
     private final UserDAO userDAODataBase;
 
     public UserController(UserDAODataBaseImpl userDAODataBase) {

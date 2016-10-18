@@ -2,9 +2,7 @@
 /out/
 /target/
 
-!/.idea/*
-/.idea/*
-!/.idea/inspectionProfiles
+/.idea/
 
 ### Java ###
 *.class
