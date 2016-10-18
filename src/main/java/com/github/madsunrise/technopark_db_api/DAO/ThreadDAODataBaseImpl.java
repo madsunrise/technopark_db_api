@@ -332,7 +332,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
 
         final List<PostDetailsExtended> posts;
         if (since == null) {
-            if (limit != null && !sort.equals("parent_tree")) {
+            if (limit != null && sort.equals("flat")) {
                 posts = postDAODataBase.getPostsByThread(threadId, limit, order);
             }
             else {
@@ -340,7 +340,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
             }
         }
         else {
-            if (limit != null && !sort.equals("parent_tree")) {
+            if (limit != null && sort.equals("flat")) {
                 posts = postDAODataBase.getPostsByThread(threadId, since, limit, order);
             }
             else {
@@ -353,23 +353,20 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         }
 
         // Add sort here
-        if (sort.equals("tree") || sort.equals("parent_tree")) {
             if (order.equals("asc")) {
                 Collections.sort(posts, new PathComparatorAsc());
             }
             else {
                 Collections.sort(posts, new PathComparatorDesc());
             }
-            if (sort.equals("tree")) {
-                return posts;
-            }
-        }
+
 
         if (limit != null && limit < posts.size()) {
+            if (sort.equals("parent_tree")) {
                 int rootCount = 0;
                 int postsCount = 0;
                 for (PostDetailsExtended postDetails: posts) {
-                    String path = postDetails.getPath();
+                    final String path = postDetails.getPath();
                     if (!path.contains(".")) {  // Перед нами корневой пост
                         rootCount++;
                         if (rootCount > limit) {
@@ -379,6 +376,8 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
                     postsCount++;
                 }
                 return posts.subList(0, postsCount);
+            }
+            return posts.subList(0, limit); // для tree
         }
 
         return posts;
@@ -386,7 +385,20 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
 
     @Override
     public ThreadDetailsExtended vote(long threadId, int vote) {
-        return null;
+        final String query;
+        if (vote == 1) {
+            query = "UPDATE thread SET likes = likes + 1 WHERE id=?;";
+        }
+        else {
+            query = "UPDATE thread SET dislikes = dislikes + 1 WHERE id=?;";
+        }
+        final int affectedRows = template.update(query, threadId);
+        if (affectedRows == 0) {
+            logger.info("Error vote because thread with ID={} does not exist!", threadId);
+            return null;
+        }
+        final Thread thread = getById(threadId);
+        return new ThreadDetailsExtended(thread);
     }
 
     @Override

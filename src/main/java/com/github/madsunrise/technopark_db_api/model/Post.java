@@ -27,7 +27,6 @@ public class Post {
 
     private int likes;
     private int dislikes;
-    private int points;
 
     private String path;
 
@@ -187,18 +186,16 @@ public class Post {
     }
 
     public int getPoints() {
-        return points;
+        return likes - dislikes;
     }
 
 
     public void like() {
         likes++;
-        points++;
     }
 
     public void dislike() {
         dislikes++;
-        points--;
     }
 
     public String getPath() {

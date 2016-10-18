@@ -514,7 +514,21 @@ public class PostDAODataBaseImpl implements PostDAO {
 
     @Override
     public PostDetailsExtended vote(long postId, int vote) {
-        return null;
+        final String query;
+
+        if (vote == 1) {
+            query = "UPDATE post SET likes = likes + 1 WHERE id=?;";
+        }
+        else {
+            query = "UPDATE post SET dislikes = dislikes + 1 WHERE id=?;";
+        }
+        final int affectedRows = template.update(query, postId);
+        if (affectedRows == 0) {
+            logger.info("Error vote because post with ID={} does not exist!", postId);
+            return null;
+        }
+        final Post post = getById(postId);
+        return new PostDetailsExtended(post);
     }
 
     @Override
@@ -532,7 +546,6 @@ public class PostDAODataBaseImpl implements PostDAO {
             final long userId = rs.getLong("user_id");
             final String forum = rs.getString("forum");
             final long forumId = rs.getLong("forum_id");
-            final String path = rs.getString("path");
             final Long parent =(Long) rs.getObject("parent");
             final boolean approved = rs.getBoolean("approved");
             final boolean highlighted = rs.getBoolean("highlighted");
@@ -540,10 +553,15 @@ public class PostDAODataBaseImpl implements PostDAO {
             final boolean spam = rs.getBoolean("spam");
             final boolean deleted = rs.getBoolean("deleted");
             final long id = rs.getLong("id");
+            final String path = rs.getString("path");
+            final int likes = rs.getInt("likes");
+            final int dislikes = rs.getInt("dislikes");
             final Post result = new Post(message, date, threadId, user, userId, forum, forumId, parent,
                     approved, highlighted, edited, spam, deleted);
             result.setPath(path);
             result.setId(id);
+            result.setLikes(likes);
+            result.setDislikes(dislikes);
             return result;
         };
     RowMapper<PostDetailsExtended> postDetailsExtMapper = (rs, i) -> {
