@@ -2,7 +2,6 @@ package com.github.madsunrise.technopark_db_api.DAO;
 
 import com.github.madsunrise.technopark_db_api.model.Forum;
 import com.github.madsunrise.technopark_db_api.model.Post;
-import com.github.madsunrise.technopark_db_api.model.Thread;
 import com.github.madsunrise.technopark_db_api.model.User;
 import com.github.madsunrise.technopark_db_api.response.*;
 import org.slf4j.Logger;

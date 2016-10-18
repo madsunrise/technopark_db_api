@@ -1,6 +1,6 @@
 package com.github.madsunrise.technopark_db_api.controllers;
 
-import com.github.madsunrise.technopark_db_api.DAO.*;
+import com.github.madsunrise.technopark_db_api.DAO.MainService;
 import com.github.madsunrise.technopark_db_api.response.Result;
 import com.github.madsunrise.technopark_db_api.response.StatusResponse;
 import org.springframework.http.HttpStatus;

@@ -11,8 +11,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import static com.github.madsunrise.technopark_db_api.response.Result.ok;
-
 /**
  * Created by ivan on 08.10.16.
  */

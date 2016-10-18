@@ -1,7 +1,5 @@
 package com.github.madsunrise.technopark_db_api.model;
 
-import com.sun.xml.internal.bind.v2.model.core.ID;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicLong;

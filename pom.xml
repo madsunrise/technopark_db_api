@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.madsunrise.technopark_db_api</groupId>
-    <artifactId>DB API</artifactId>
+    <artifactId>DB_API</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>

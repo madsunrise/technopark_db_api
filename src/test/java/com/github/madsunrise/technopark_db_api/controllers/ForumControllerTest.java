@@ -2,10 +2,7 @@ package com.github.madsunrise.technopark_db_api.controllers;
 
 
 import org.junit.Test;
-
-
 import org.springframework.http.MediaType;
-
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;

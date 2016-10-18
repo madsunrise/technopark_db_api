@@ -3,7 +3,6 @@ package com.github.madsunrise.technopark_db_api.DAO;
 import com.github.madsunrise.technopark_db_api.model.Post;
 import com.github.madsunrise.technopark_db_api.response.PostDetails;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
-import javafx.geometry.Pos;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -1,14 +1,12 @@
 package com.github.madsunrise.technopark_db_api.DAO;
 
 import com.github.madsunrise.technopark_db_api.model.Forum;
-import com.github.madsunrise.technopark_db_api.model.Post;
 import com.github.madsunrise.technopark_db_api.model.Thread;
 import com.github.madsunrise.technopark_db_api.model.User;
 import com.github.madsunrise.technopark_db_api.response.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.propertyeditors.StringArrayPropertyEditor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -20,12 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.Date;
 
 /**
  * Created by ivan on 17.10.16.

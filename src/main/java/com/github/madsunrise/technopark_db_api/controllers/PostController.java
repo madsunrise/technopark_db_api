@@ -1,10 +1,12 @@
 package com.github.madsunrise.technopark_db_api.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.madsunrise.technopark_db_api.DAO.*;
-import com.github.madsunrise.technopark_db_api.response.Result;
+import com.github.madsunrise.technopark_db_api.DAO.ForumDAODataBaseImpl;
+import com.github.madsunrise.technopark_db_api.DAO.PostDAODataBaseImpl;
+import com.github.madsunrise.technopark_db_api.DAO.ThreadDAODataBaseImpl;
 import com.github.madsunrise.technopark_db_api.response.PostDetails;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
+import com.github.madsunrise.technopark_db_api.response.Result;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;

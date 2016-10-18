@@ -3,8 +3,6 @@ package com.github.madsunrise.technopark_db_api.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.madsunrise.technopark_db_api.model.Thread;
 
-import java.time.LocalDateTime;
-
 /**
  * Created by ivan on 11.10.16.
  */
