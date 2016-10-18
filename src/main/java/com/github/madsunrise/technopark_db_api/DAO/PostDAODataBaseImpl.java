@@ -441,24 +441,45 @@ public class PostDAODataBaseImpl implements PostDAO {
     }
 
     @Override
-    public Long remove(long postId) {
-        return null;
+    public boolean remove(long postId) {
+        final String query = "UPDATE post SET deleted=? WHERE id=?;";
+        final int affectedRows = template.update(query, true, postId);
+        if (affectedRows == 0) {
+            logger.info("Removing post with ID={} failed", postId);
+            return false;
+        }
+        final Post post = getById(postId);
+        threadDAODataBase.removePost(post.getThreadId());
+        logger.info("Removed post with ID={}", postId);
+        return true;
     }
 
     @Override
-    public Long restore(long postId) {
-        return null;
+    public boolean restore(long postId) {
+        final String query = "UPDATE post SET deleted=? WHERE id=?;";
+        final int affectedRows = template.update(query, false, postId);
+        if (affectedRows == 0) {
+            logger.info("Restoring post with ID={} failed", postId);
+            return false;
+        }
+        final Post post = getById(postId);
+        threadDAODataBase.addPost(post.getThreadId());
+        logger.info("Restored post with ID={}", postId);
+        return true;
     }
 
     @Override
     public void markDeleted(long threadId) {
-
+        final String query = "UPDATE post SET deleted=? WHERE thread_id=?;";
+        template.update(query, true, threadId);
     }
 
     @Override
     public void markRestored(long threadId) {
-
+        final String query = "UPDATE post SET deleted=? WHERE thread_id=?;";
+        template.update(query, false, threadId);
     }
+
 
     @Override
     public PostDetailsExtended vote(long postId, int vote) {

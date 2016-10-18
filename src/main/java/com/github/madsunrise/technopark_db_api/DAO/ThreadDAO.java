@@ -15,8 +15,8 @@ public interface ThreadDAO {
     Thread getById (long id);
     ThreadDetails create (String forum, String title, boolean closed, String userEmail, LocalDateTime date,
                           String message, String slug, /*optional*/ boolean deleted);
-    Long close (long threadId);
-    Long open (long threadId);
+    boolean close (long threadId);
+    boolean open (long threadId);
     ThreadDetailsExtended getDetails (long threadId);
     ThreadDetailsExtended getDetails (long threadId, List<String> related);
     void clear();
@@ -24,8 +24,8 @@ public interface ThreadDAO {
     long getAmount();
     long save (Thread thread);
     void addPost(long threadId);
-    Long remove (long threadId);
-    Long restore (long threadId);
+    boolean remove (long threadId);
+    boolean restore (long threadId);
     Long subscribe (long threadId, String userEmail);
     Long unsubscribe (long threadId, String userEmail);
     List<PostDetailsExtended> getPosts (long threadId, LocalDateTime since, Integer limit, String order, String sort);

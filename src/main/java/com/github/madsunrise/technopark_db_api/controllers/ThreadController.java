@@ -87,24 +87,33 @@ public class ThreadController {
     @RequestMapping(path = "/db/api/thread/close", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse close(@RequestBody ThreadId request) {
-        final Long id = threadDAODataBase.close(request.getThreadId());
 
-        if (id == null) {
+        if (request.getThreadId() == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
+        }
+
+        final boolean success = threadDAODataBase.close(request.getThreadId());
+
+        if (success == false) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Thread not found");
         }
-        final ThreadId result = new ThreadId(id);
+        final ThreadId result = new ThreadId(request.getThreadId());
         return new CustomResponse<>(Codes.OK, result);
     }
 
     @RequestMapping(path = "/db/api/thread/open", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse open(@RequestBody ThreadId request) {
-        final Long id = threadDAODataBase.open(request.getThreadId());
+        if (request.getThreadId() == null) {
+            return new CustomResponse<>(Codes.NOT_FOUND, "Bad parametres");
+        }
 
-        if (id == null) {
+        final boolean success = threadDAODataBase.open(request.getThreadId());
+
+        if (success == false) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Thread not found");
         }
-        final ThreadId result = new ThreadId(id);
+        final ThreadId result = new ThreadId(request.getThreadId());
         return new CustomResponse<>(Codes.OK, result);
     }
 
@@ -113,22 +122,22 @@ public class ThreadController {
     @RequestMapping(path = "/db/api/thread/remove", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse remove(@RequestBody ThreadId request) {
-        final Long id = threadDAODataBase.remove(request.getThreadId());
-        if (id == null) {
+        final boolean success = threadDAODataBase.remove(request.getThreadId());
+        if (!success) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Thread not found");
         }
-        final ThreadId result = new ThreadId(id);
+        final ThreadId result = new ThreadId(request.getThreadId());
         return new CustomResponse<>(Codes.OK, result);
     }
 
     @RequestMapping(path = "/db/api/thread/restore", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse restore(@RequestBody ThreadId request) {
-        final Long id = threadDAODataBase.restore(request.getThreadId());
-        if (id == null) {
+        final boolean success = threadDAODataBase.restore(request.getThreadId());
+        if (!success) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Thread not found");
         }
-        final ThreadId result = new ThreadId(id);
+        final ThreadId result = new ThreadId(request.getThreadId());
         return new CustomResponse<>(Codes.OK, result);
     }
 
@@ -260,17 +269,17 @@ public class ThreadController {
 
     private static class ThreadId {
             @JsonProperty("thread")
-            private long threadId;
+            private Long threadId;
 
             @SuppressWarnings("unused")
             ThreadId() {
             }
 
-            public ThreadId(long threadId) {
+            public ThreadId(Long threadId) {
                 this.threadId = threadId;
             }
 
-            public long getThreadId() {
+            public Long getThreadId() {
                 return threadId;
             }
         }

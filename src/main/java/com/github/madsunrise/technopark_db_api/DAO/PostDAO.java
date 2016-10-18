@@ -30,8 +30,8 @@ public interface PostDAO {
     List<PostDetailsExtended> getPostsByUser(String userEmail,
                                              LocalDateTime since, Integer limit, String order);
 
-    Long remove (long postId);
-    Long restore (long postId);
+    boolean remove (long postId);
+    boolean restore (long postId);
     void markDeleted(long threadId);
     void markRestored (long threadId);
     PostDetailsExtended vote(long postId, int vote);

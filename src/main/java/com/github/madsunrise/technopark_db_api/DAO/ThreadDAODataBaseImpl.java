@@ -43,6 +43,9 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
     @Autowired
     private ForumDAODataBaseImpl forumDAODataBase;
 
+    @Autowired
+    private PostDAODataBaseImpl postDAODataBase;
+
 
     @Override
     public void clear() {
@@ -183,14 +186,35 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         template.update(query, threadId);
     }
 
+
+    public void removePost(long threadId) {
+        final String query = "UPDATE thread SET posts = posts - 1 WHERE id=?;";
+        template.update(query, threadId);
+    }
+
+
     @Override
-    public Long close(long threadId) {
-        return null;
+    public boolean close(long threadId) {
+        final String query = "UPDATE thread SET closed=? WHERE id=?;";
+        final int affectedRows = template.update(query, false, threadId);
+        if (affectedRows == 0) {
+            logger.info("Closing thread with ID={} failed", threadId);
+            return false;
+        }
+        logger.info("Closed thread with ID={}", threadId);
+        return true;
     }
 
     @Override
-    public Long open(long threadId) {
-        return null;
+    public boolean open(long threadId) {
+        final String query = "UPDATE thread SET closed=? WHERE id=?;";
+        final int affectedRows = template.update(query, true, threadId);
+        if (affectedRows == 0) {
+            logger.info("Opening thread with ID={} failed", threadId);
+            return false;
+        }
+        logger.info("Opened thread with ID={}", threadId);
+        return true;
     }
 
     @Override
@@ -236,13 +260,30 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
     }
 
     @Override
-    public Long remove(long threadId) {
-        return null;
+    public boolean remove(long threadId) {
+        final String query = "UPDATE thread SET deleted=? WHERE id=?;";
+        final int affectedRows = template.update(query, true, threadId);
+        if (affectedRows == 0) {
+            logger.info("Removing thread with ID={} failed", threadId);
+            return false;
+        }
+
+        postDAODataBase.markDeleted(threadId);
+        logger.info("Removed thread with ID={}", threadId);
+        return true;
     }
 
     @Override
-    public Long restore(long threadId) {
-        return null;
+    public boolean restore(long threadId){
+        final String query = "UPDATE thread SET deleted=? WHERE id=?;";
+        final int affectedRows = template.update(query, false, threadId);
+        if (affectedRows == 0) {
+            logger.info("Restoring thread with ID={} failed", threadId);
+            return false;
+        }
+        postDAODataBase.markRestored(threadId);
+        logger.info("Restored thread with ID={}", threadId);
+        return true;
     }
 
     @Override

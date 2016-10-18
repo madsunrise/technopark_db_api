@@ -101,22 +101,22 @@ public class PostController {
     @RequestMapping(path = "/db/api/post/remove", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse remove(@RequestBody PostId postId) {
-        final Long id = postDAODataBase.remove(postId.getPostId());
-        if (id == null) {
+        final boolean success = postDAODataBase.remove(postId.getPostId());
+        if (!success) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Post not found");
         }
-        final PostId result = new PostId(id);
+        final PostId result = new PostId(postId.getPostId());
         return new CustomResponse<>(Codes.OK, result);
     }
 
     @RequestMapping(path = "/db/api/post/restore", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse restore(@RequestBody PostId postId) {
-        final Long id = postDAODataBase.restore(postId.getPostId());
-        if (id == null) {
+        final boolean success = postDAODataBase.restore(postId.getPostId());
+        if (!success) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Post not found");
         }
-        final PostId result = new PostId(id);
+        final PostId result = new PostId(postId.getPostId());
         return new CustomResponse<>(Codes.OK, result);
     }
 

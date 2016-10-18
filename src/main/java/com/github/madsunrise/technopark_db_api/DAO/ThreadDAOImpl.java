@@ -21,11 +21,6 @@ public class ThreadDAOImpl implements ThreadDAO {
     private static final Logger logger = LoggerFactory.getLogger(ThreadDAOImpl.class.getName());
 
     @Override
-    public void addPost(long threadId) {
-
-    }
-
-    @Override
     public Thread getById(long id) {
         return idToThread.get(id);
     }
@@ -57,27 +52,32 @@ public class ThreadDAOImpl implements ThreadDAO {
     }
 
     @Override
-    public Long close(long threadId) {
+    public boolean close(long threadId) {
         final Thread thread = getById(threadId);
         if (thread == null) {
             logger.info("Error closing thread with ID={} because it does not exist", threadId);
-            return null;
+            return false;
         }
         thread.setClosed(true);
         logger.info("Closed thread with ID={}", threadId);
-        return thread.getId();
+        return true;
     }
 
     @Override
-    public Long open(long threadId) {
+    public boolean open(long threadId) {
         final Thread thread = getById(threadId);
         if (thread == null) {
             logger.info("Error opening thread with ID={} because it does not exist!", threadId);
-            return null;
+            return false;
         }
         thread.setClosed(false);
         logger.info("Opened thread with ID={}", threadId);
-        return thread.getId();
+        return true;
+    }
+
+    @Override
+    public void addPost(long threadId) {
+
     }
 
     @Override
@@ -136,33 +136,33 @@ public class ThreadDAOImpl implements ThreadDAO {
     }
 
     @Override
-    public Long remove(long threadId) {
+    public boolean remove(long threadId) {
         final Thread thread = getById(threadId);
         if (thread == null) {
             logger.info("Error removing thread with ID={} because it does not exist!", threadId);
-            return null;
+            return false;
         }
         thread.setDeleted(true);
 
         new PostDAOImpl().markDeleted(threadId);
 
         logger.info("Removing thread with ID={}", threadId);
-        return thread.getId();
+        return true;
     }
 
     @Override
-    public Long restore(long threadId) {
+    public boolean restore(long threadId) {
         final Thread thread = getById(threadId);
         if (thread == null) {
             logger.info("Error restoring thread with ID={} because it does not exist!", threadId);
-            return null;
+            return false;
         }
         thread.setDeleted(false);
 
         new PostDAOImpl().markRestored(threadId);
 
         logger.info("Restoring thread with ID={}", threadId);
-        return thread.getId();
+        return true;
     }
 
     @Override
