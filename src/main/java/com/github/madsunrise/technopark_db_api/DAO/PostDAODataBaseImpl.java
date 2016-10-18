@@ -432,8 +432,39 @@ public class PostDAODataBaseImpl implements PostDAO {
 
     @Override
     public List<PostDetailsExtended> getPostsByThread(long threadId, LocalDateTime since, Integer limit, String order) {
-        return null;
+        final String query = "SELECT * FROM post WHERE thread_id=? AND date >= ? ORDER BY date " + order + " LIMIT ?;";
+        final List<PostDetailsExtended> posts = template.query(query, postDetailsExtMapper,
+                threadId, since, limit);
+        return posts;
     }
+
+    public List<PostDetailsExtended> getPostsByThread (long threadId, LocalDateTime since, String order) {
+        final String query = "SELECT * FROM post WHERE thread_id=? AND date >= ? ORDER BY date " + order + ';';
+        final List<PostDetailsExtended> posts = template.query(query, postDetailsExtMapper,
+                threadId, since);
+        return posts;
+    }
+
+    public List<PostDetailsExtended> getPostsByThread (long threadId, Integer limit, String order) {
+        final String query = "SELECT * FROM post WHERE thread_id=? ORDER BY date " + order + " LIMIT ?";
+        final List<PostDetailsExtended> posts = template.query(query, postDetailsExtMapper,
+                threadId, limit);
+        return posts;
+    }
+
+    public List<PostDetailsExtended> getPostsByThread (long threadId, String order) {
+        final String query = "SELECT * FROM post WHERE thread_id=? ORDER BY date " + order + ';';
+        final List<PostDetailsExtended> posts = template.query(query, postDetailsExtMapper,
+                threadId);
+        return posts;
+    }
+
+
+
+
+
+
+
 
     @Override
     public List<PostDetailsExtended> getPostsByUser(String userEmail, LocalDateTime since, Integer limit, String order) {
@@ -536,6 +567,10 @@ public class PostDAODataBaseImpl implements PostDAO {
                 approved, highlighted, edited, spam, deleted);
         post.setPath(path);
         post.setId(id);
-        return new PostDetailsExtended(post);
+        PostDetailsExtended result = new PostDetailsExtended(post);
+        result.setUser(user);
+        result.setForum(forum);
+        result.setThread(threadId);
+        return result;
     };
 }

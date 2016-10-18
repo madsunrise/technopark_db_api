@@ -2,10 +2,7 @@ package com.github.madsunrise.technopark_db_api.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.madsunrise.technopark_db_api.Codes;
-import com.github.madsunrise.technopark_db_api.DAO.ForumDAODataBaseImpl;
-import com.github.madsunrise.technopark_db_api.DAO.PostDAO;
-import com.github.madsunrise.technopark_db_api.DAO.PostDAODataBaseImpl;
-import com.github.madsunrise.technopark_db_api.DAO.PostDAOImpl;
+import com.github.madsunrise.technopark_db_api.DAO.*;
 import com.github.madsunrise.technopark_db_api.response.CustomResponse;
 import com.github.madsunrise.technopark_db_api.response.PostDetails;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
@@ -25,10 +22,13 @@ public class PostController {
 
     private final PostDAODataBaseImpl postDAODataBase;
     private final ForumDAODataBaseImpl forumDAODataBase;
+    private final ThreadDAODataBaseImpl threadDAODataBase;
 
-    public PostController(PostDAODataBaseImpl postDAODataBase, ForumDAODataBaseImpl forumDAODataBase) {
+    public PostController(PostDAODataBaseImpl postDAODataBase, ForumDAODataBaseImpl forumDAODataBase,
+                          ThreadDAODataBaseImpl threadDAODataBase) {
         this.postDAODataBase = postDAODataBase;
         this.forumDAODataBase = forumDAODataBase;
+        this.threadDAODataBase = threadDAODataBase;
     }
 
     @RequestMapping(path = "/db/api/post/create", method = RequestMethod.POST)
@@ -87,7 +87,7 @@ public class PostController {
         if (forumShortName != null) {
             result = forumDAODataBase.getPosts(forumShortName, since, limit, order, null);
         } else {
-            result = postDAODataBase.getPostsByThread(threadId, since, limit, order);
+            result = threadDAODataBase.getPosts(threadId, since, limit, order, "flat");
         }
 
         if (result == null) {

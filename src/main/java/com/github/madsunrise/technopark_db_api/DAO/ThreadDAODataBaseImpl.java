@@ -21,9 +21,9 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by ivan on 17.10.16.
@@ -318,9 +318,70 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         return thread.getId();
     }
 
+
+
+
     @Override
-    public List<PostDetailsExtended> getPosts(long threadId, LocalDateTime since, Integer limit, String order, String sort) {
-        return null;
+    public List<PostDetailsExtended> getPosts(long threadId, LocalDateTime since,
+                                              Integer limit, String order, String sort) {
+        final Thread thread = getById(threadId);
+        if (thread == null) {
+            logger.info("Error getting post list because thread with ID={} does not exist!", threadId);
+            return null;
+        }
+
+        final List<PostDetailsExtended> posts;
+        if (since == null) {
+            if (limit != null && !sort.equals("parent_tree")) {
+                posts = postDAODataBase.getPostsByThread(threadId, limit, order);
+            }
+            else {
+                posts = postDAODataBase.getPostsByThread(threadId, order);
+            }
+        }
+        else {
+            if (limit != null && !sort.equals("parent_tree")) {
+                posts = postDAODataBase.getPostsByThread(threadId, since, limit, order);
+            }
+            else {
+                posts = postDAODataBase.getPostsByThread(threadId, since, order);
+            }
+        }
+
+        if (sort.equals("flat")) {
+            return posts;
+        }
+
+        // Add sort here
+        if (sort.equals("tree") || sort.equals("parent_tree")) {
+            if (order.equals("asc")) {
+                Collections.sort(posts, new PathComparatorAsc());
+            }
+            else {
+                Collections.sort(posts, new PathComparatorDesc());
+            }
+            if (sort.equals("tree")) {
+                return posts;
+            }
+        }
+
+        if (limit != null && limit < posts.size()) {
+                int rootCount = 0;
+                int postsCount = 0;
+                for (PostDetailsExtended postDetails: posts) {
+                    String path = postDetails.getPath();
+                    if (!path.contains(".")) {  // Перед нами корневой пост
+                        rootCount++;
+                        if (rootCount > limit) {
+                            break;
+                        }
+                    }
+                    postsCount++;
+                }
+                return posts.subList(0, postsCount);
+        }
+
+        return posts;
     }
 
     @Override
@@ -346,5 +407,59 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
     @Override
     public List<ThreadDetailsExtended> getThreadsByUser(String userEmail, LocalDateTime since, Integer limit, String order) {
         return null;
+    }
+
+
+
+    static class DateComparator implements Comparator<ThreadDetailsExtended> {
+        @Override
+        public int compare(ThreadDetailsExtended t1, ThreadDetailsExtended t2) {
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            final LocalDateTime d1 = LocalDateTime.parse(t1.getDate(), formatter);
+            final LocalDateTime d2 = LocalDateTime.parse(t2.getDate(), formatter);
+            return d1.compareTo(d2);
+        }
+    }
+
+    static class PathComparatorAsc implements Comparator<PostDetailsExtended> {
+        @Override
+        public int compare(PostDetailsExtended p1, PostDetailsExtended p2) {
+            final String path1 = p1.getPath();
+            final String path2 = p2.getPath();
+            return path1.compareTo(path2);
+        }
+    }
+
+    static class PathComparatorDesc implements Comparator<PostDetailsExtended> {
+        @Override
+        public int compare(PostDetailsExtended p1, PostDetailsExtended p2) {
+            final String path1 = p1.getPath();
+            final String path2 = p2.getPath();
+            if (path1.contains(".") || path2.contains(".")) {
+                final String[] array1 = path1.split("\\.");
+                final String[] array2 = path2.split("\\.");
+                if (array1[0].equals(array2[0])) {
+                    return path1.compareTo(path2);
+                } else {
+                    return path2.compareTo(path1);
+                }
+            }
+
+            return path2.compareTo(path1);
+        }
+    }
+
+
+
+
+
+    static class DatePostsComparator implements Comparator<PostDetailsExtended> {
+        @Override
+        public int compare(PostDetailsExtended p1, PostDetailsExtended p2) {
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            final LocalDateTime d1 = LocalDateTime.parse(p1.getDate(), formatter);
+            final LocalDateTime d2 = LocalDateTime.parse(p2.getDate(), formatter);
+            return d1.compareTo(d2);
+        }
     }
 }
