@@ -29,7 +29,7 @@ import java.util.*;
 @Transactional
 public class ThreadDAODataBaseImpl implements ThreadDAO{
     private final JdbcTemplate template;
-    private static final Logger logger = LoggerFactory.getLogger(ThreadDAODataBaseImpl.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(ThreadDAODataBaseImpl.class.getName());
     public ThreadDAODataBaseImpl(JdbcTemplate template) {
         this.template = template;
     }
@@ -48,7 +48,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
     public void clear() {
         final String dropTable = "DROP TABLE IF EXISTS thread";
         template.execute(dropTable);
-        logger.info("Table thread was dropped");
+        LOGGER.info("Table thread was dropped");
     }
 
     @Override
@@ -72,7 +72,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
                 "FOREIGN KEY (forum_id) REFERENCES forum(id)) CHARACTER SET utf8" +
                 " DEFAULT COLLATE utf8_general_ci;";
         template.execute(createTable);
-        logger.info("Table thread was created");
+        LOGGER.info("Table thread was created");
     }
 
     @Override
@@ -123,12 +123,12 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
                                 String userEmail, LocalDateTime date, String message, String slug, boolean deleted) {
         final Forum forum = forumDAODataBase.getByShortName(forumName);
         if (forum == null) {
-            logger.info("Error creating thread because forum \"{}\" does not exist!", forumName);
+            LOGGER.info("Error creating thread because forum \"{}\" does not exist!", forumName);
             return null;
         }
         final User user = userDAODataBase.getByEmail(userEmail);
         if (user == null) {
-            logger.info("Error creating thread because user \"{}\" does not exist!", userEmail);
+            LOGGER.info("Error creating thread because user \"{}\" does not exist!", userEmail);
             return null;
         }
 
@@ -139,13 +139,13 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
             template.update(new ThreadPstCreator(thread), keyHolder);
         }
         catch (DuplicateKeyException e) {
-            logger.info("Error creating thread because it already exists!");
+            LOGGER.info("Error creating thread because it already exists!");
             return null;
         }
 
         final Map<String, Object> keys = keyHolder.getKeys();
         thread.setId((Long)keys.get("GENERATED_KEY"));
-        logger.info("Thread with title={} successful created", title);
+        LOGGER.info("Thread with title={} successful created", title);
         final ThreadDetails<String, String> threadDetails = new ThreadDetails<>(thread);
         threadDetails.setForum(thread.getForum());
         threadDetails.setUser(thread.getUser());
@@ -196,10 +196,10 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         final String query = "UPDATE thread SET closed=? WHERE id=?;";
         final int affectedRows = template.update(query, 1, threadId);
         if (affectedRows == 0) {
-            logger.info("Closing thread with ID={} failed", threadId);
+            LOGGER.info("Closing thread with ID={} failed", threadId);
             return false;
         }
-        logger.info("Closed thread with ID={}", threadId);
+        LOGGER.info("Closed thread with ID={}", threadId);
         return true;
     }
 
@@ -208,10 +208,10 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         final String query = "UPDATE thread SET closed=? WHERE id=?;";
         final int affectedRows = template.update(query, 0, threadId);
         if (affectedRows == 0) {
-            logger.info("Opening thread with ID={} failed", threadId);
+            LOGGER.info("Opening thread with ID={} failed", threadId);
             return false;
         }
-        logger.info("Opened thread with ID={}", threadId);
+        LOGGER.info("Opened thread with ID={}", threadId);
         return true;
     }
 
@@ -224,7 +224,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
     public ThreadDetailsExtended getDetails(long threadId, List<String> related) {
         final Thread thread = getById(threadId);
         if (thread == null) {
-            logger.info("Error getting thread details - thread with ID={}: does not exist!", threadId);
+            LOGGER.info("Error getting thread details - thread with ID={}: does not exist!", threadId);
             return null;
         }
         final ThreadDetailsExtended result = new ThreadDetailsExtended(thread);
@@ -248,7 +248,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
             result.setForum(thread.getForum());
         }
 
-        logger.info("Getting thread (ID={}) details is success", threadId);
+        LOGGER.info("Getting thread (ID={}) details is success", threadId);
         return result;
     }
 
@@ -262,12 +262,12 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         final String query = "UPDATE thread SET deleted=? WHERE id=?;";
         final int affectedRows = template.update(query, true, threadId);
         if (affectedRows == 0) {
-            logger.info("Removing thread with ID={} failed", threadId);
+            LOGGER.info("Removing thread with ID={} failed", threadId);
             return false;
         }
 
         postDAODataBase.markDeleted(threadId);
-        logger.info("Removed thread with ID={}", threadId);
+        LOGGER.info("Removed thread with ID={}", threadId);
         return true;
     }
 
@@ -276,11 +276,11 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         final String query = "UPDATE thread SET deleted=? WHERE id=?;";
         final int affectedRows = template.update(query, false, threadId);
         if (affectedRows == 0) {
-            logger.info("Restoring thread with ID={} failed", threadId);
+            LOGGER.info("Restoring thread with ID={} failed", threadId);
             return false;
         }
         postDAODataBase.markRestored(threadId);
-        logger.info("Restored thread with ID={}", threadId);
+        LOGGER.info("Restored thread with ID={}", threadId);
         return true;
     }
 
@@ -288,15 +288,15 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
     public Long subscribe(long threadId, String userEmail) {
         final Thread thread = getById(threadId);
         if (thread == null) {
-            logger.info("Error subscribing user because thread with ID={} does not exist!", threadId);
+            LOGGER.info("Error subscribing user because thread with ID={} does not exist!", threadId);
             return null;
         }
         final Long userId = userDAODataBase.subscribe(threadId, userEmail);
         if (userId == null) {
-            logger.info("Error subscribing user because user with email={} does not exist!", userEmail);
+            LOGGER.info("Error subscribing user because user with email={} does not exist!", userEmail);
             return null;
         }
-        logger.info("User {} has subscribed to thread with ID={}", userEmail, threadId);
+        LOGGER.info("User {} has subscribed to thread with ID={}", userEmail, threadId);
         return thread.getId();
     }
 
@@ -304,15 +304,15 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
     public Long unsubscribe(long threadId, String userEmail) {
         final Thread thread = getById(threadId);
         if (thread == null) {
-            logger.info("Error unsubscribing user because thread with ID={} does not exist!", threadId);
+            LOGGER.info("Error unsubscribing user because thread with ID={} does not exist!", threadId);
             return null;
         }
         final Long userId = userDAODataBase.unsubscribe(threadId, userEmail);
         if (userId == null) {
-            logger.info("Error unsubscribing user because user with email={} does not exist!", userEmail);
+            LOGGER.info("Error unsubscribing user because user with email={} does not exist!", userEmail);
             return null;
         }
-        logger.info("User {} has unsubscribed from thread with ID={}", userEmail, threadId);
+        LOGGER.info("User {} has unsubscribed from thread with ID={}", userEmail, threadId);
         return thread.getId();
     }
 
@@ -324,7 +324,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
                                               Integer limit, String order, String sort) {
         final Thread thread = getById(threadId);
         if (thread == null) {
-            logger.info("Error getting post list because thread with ID={} does not exist!", threadId);
+            LOGGER.info("Error getting post list because thread with ID={} does not exist!", threadId);
             return null;
         }
 
@@ -392,7 +392,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         }
         final int affectedRows = template.update(query, threadId);
         if (affectedRows == 0) {
-            logger.info("Error vote because thread with ID={} does not exist!", threadId);
+            LOGGER.info("Error vote because thread with ID={} does not exist!", threadId);
             return null;
         }
         final Thread thread = getById(threadId);
@@ -404,7 +404,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         final String query = "UPDATE thread SET message = ?, slug = ? WHERE id = ?;";
         final int affectedRows = template.update(query, message, slug, threadId);
         if (affectedRows == 0) {
-            logger.info("Error update thread because thread with ID={} does not exist!", threadId);
+            LOGGER.info("Error update thread because thread with ID={} does not exist!", threadId);
             return null;
         }
         final Thread thread = getById(threadId);

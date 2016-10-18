@@ -2,7 +2,6 @@ package com.github.madsunrise.technopark_db_api.model;
 
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by ivan on 08.10.16.
@@ -15,11 +14,9 @@ public class User {
     private String email;
     private String about;
     private boolean anonymous;
-    private Set<String> followers = new HashSet<>();
-    private Set<String> following = new HashSet<>();
-    private Set<Long> subscriptions = new HashSet<>();
-
-    private static final AtomicLong ID_GENETATOR = new AtomicLong(0);
+    private List<String> followers = new ArrayList<>();
+    private List<String> followees = new ArrayList<>();
+    private List<Long> subscriptions = new ArrayList<>();
 
     public User(String username, String name, String email, String about, boolean anonymous) {
         this.username = username;
@@ -27,7 +24,6 @@ public class User {
         this.email = email;
         this.about = about;
         this.anonymous = anonymous;
-        this.id = ID_GENETATOR.getAndIncrement();
     }
 
     public long getId() {
@@ -78,29 +74,28 @@ public class User {
         this.anonymous = anonymous;
     }
 
-    public Set<String> getFollowers() {;
+    public List<String> getFollowers() {
         return followers;
     }
 
-    public Set<String> getFollowees() {
-        return following;
-    }
-
-
-    public void setFollowers(Set<String> followers) {
+    public void setFollowers(List<String> followers) {
         this.followers = followers;
     }
 
-    public void setFollowing(Set<String> following) {
-        this.following = following;
+    public List<String> getFollowees() {
+        return followees;
     }
 
-    public void setSubscriptions(Set<Long> subscriptions) {
-        this.subscriptions = subscriptions;
+    public void setFollowees(List<String> followees) {
+        this.followees = followees;
     }
 
-    public Set<Long> getSubscriptions() {
+    public List<Long> getSubscriptions() {
         return subscriptions;
+    }
+
+    public void setSubscriptions(List<Long> subscriptions) {
+        this.subscriptions = subscriptions;
     }
 
     public void subscribe (Long threadId) {
@@ -121,10 +116,10 @@ public class User {
 
 
     public void addFollowee (String followee) {
-            following.add(followee);
+            followees.add(followee);
     }
 
     public void removeFollowee (String followee) {
-            following.remove(followee);
+            followees.remove(followee);
     }
 }

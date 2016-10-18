@@ -29,7 +29,7 @@ import java.util.*;
 public class UserDAODataBaseImpl implements UserDAO {
 
     private final JdbcTemplate template;
-    private static final Logger logger = LoggerFactory.getLogger(UserDAODataBaseImpl.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserDAODataBaseImpl.class.getName());
     public UserDAODataBaseImpl(JdbcTemplate template) {
         this.template = template;
     }
@@ -41,7 +41,7 @@ public class UserDAODataBaseImpl implements UserDAO {
     public void clear() {
         final String dropTable = "DROP TABLE IF EXISTS user";
         template.execute(dropTable);
-        logger.info("Table user was dropped");
+        LOGGER.info("Table user was dropped");
     }
 
     @Override
@@ -54,7 +54,7 @@ public class UserDAODataBaseImpl implements UserDAO {
                 "about TEXT," +
                 "anonymous TINYINT(1) NOT NULL DEFAULT 0) CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;";
         template.execute(createTable);
-        logger.info("Table user was created");
+        LOGGER.info("Table user was created");
     }
 
     @Override
@@ -70,18 +70,9 @@ public class UserDAODataBaseImpl implements UserDAO {
             final User user = template.queryForObject(
                     "SELECT * FROM user WHERE email = ?", userMapper, email);
 
-            final String getFollowers = "SELECT follower_email FROM following WHERE followee_id=?;";
-            final List<String> followers = template.queryForList(getFollowers, String.class, user.getId());
-
-            final String getFollowees = "SELECT followee_email FROM following WHERE follower_id=?;";
-            final List<String> followees = template.queryForList(getFollowees, String.class, user.getId());
-
-            final String getSubscriptions = "SELECT thread_id FROM subscription WHERE user_id = ?;";
-            final List<Long> subscriptions = template.queryForList(getSubscriptions, Long.class, user.getId());
-
-            user.setFollowers(new HashSet<>(followers));
-            user.setFollowing(new HashSet<>(followees));
-            user.setSubscriptions(new HashSet<>(subscriptions));
+            user.setFollowers(loadFollowers(user.getId()));
+            user.setFollowees(loadFollowees(user.getId()));
+            user.setSubscriptions(loadSubscriptions(user.getId()));
             return user;
         }
         catch (EmptyResultDataAccessException e) {
@@ -97,12 +88,12 @@ public class UserDAODataBaseImpl implements UserDAO {
             template.update(new UserPstCreator(user), keyHolder);
         }
         catch (DuplicateKeyException e) {
-            logger.info("Error creating user - user with email \"{}\" already exists!", email);
+            LOGGER.info("Error creating user - user with email \"{}\" already exists!", email);
             return null;
         }
         final Map<String, Object> keys = keyHolder.getKeys();
         user.setId((Long)keys.get("GENERATED_KEY"));
-        logger.info("User with email \"{}\" successful created", email);
+        LOGGER.info("User with email \"{}\" successful created", email);
         return new UserDetails(user);
     }
 
@@ -129,10 +120,10 @@ public class UserDAODataBaseImpl implements UserDAO {
     public UserDetailsExtended getDetails(String email) {
         final User user = getByEmail(email);
         if (user == null) {
-            logger.info("Error getting user details - user with email \"{}\" does not exist!", email);
+            LOGGER.info("Error getting user details - user with email \"{}\" does not exist!", email);
             return null;
         }
-        logger.info("Getting user \"{}\" details is success", email);
+        LOGGER.info("Getting user \"{}\" details is success", email);
         return new UserDetailsExtended(user);
 
     }
@@ -140,39 +131,40 @@ public class UserDAODataBaseImpl implements UserDAO {
     @Override
     public UserDetailsExtended follow(String followerEmail, String followeeEmail) {
         if (followerEmail.equals(followeeEmail)) {
-            logger.info("Error following!");
+            LOGGER.info("Error following!");
             return null;
         }
         final User follower = getByEmail(followerEmail);
         final User followee = getByEmail(followeeEmail);
         if (follower == null || followee == null) {
-            logger.info("Error following!");
+            LOGGER.info("Error following!");
             return null;
         }
-        final String query = "INSERT INTO following (follower_id, follower_email," +
-                " followee_id, followee_email) VALUES (?,?,?,?);";
+
         try {
-            template.update(query, follower.getId(), followerEmail, followee.getId(), followeeEmail);
+            final String query = "INSERT INTO following (follower_id, followee_id) VALUES (?,?);";
+            template.update(query, follower.getId(), followee.getId());
         }
         catch (DuplicateKeyException e) {
-            logger.info("User {} already followed user {}!", followerEmail, followeeEmail);
+            LOGGER.info("User {} already followed user {}!", followerEmail, followeeEmail);
             follower.addFollowee(followeeEmail);
             return new UserDetailsExtended(follower);
         }
-        logger.info("{} has followed {}", followerEmail, followeeEmail);
+        LOGGER.info("{} has followed {}", followerEmail, followeeEmail);
         return new UserDetailsExtended(follower);
     }
 
     @Override
     public UserDetailsExtended unfollow(String followerEmail, String followeeEmail) {
         if (followerEmail.equals(followeeEmail)) {
-            logger.info("Error unfollowing!");
+            LOGGER.info("Error unfollowing!");
             return null;
         }
+
         final User follower = getByEmail(followerEmail);
         final User followee = getByEmail(followeeEmail);
         if (follower == null || followee == null) {
-            logger.info("Error unfollowing - user does not exist!");
+            LOGGER.info("Error unfollowing - user does not exist!");
             return null;
         }
         follower.removeFollowee(followeeEmail);
@@ -181,220 +173,115 @@ public class UserDAODataBaseImpl implements UserDAO {
 
         template.update(query, follower.getId(), followee.getId());
 
-
-
-        logger.info("{} has unfollowed {}", followerEmail, followeeEmail);
+        LOGGER.info("{} has unfollowed {}", followerEmail, followeeEmail);
         return new UserDetailsExtended(follower);
     }
 
+
     @Override
     public List<UserDetailsExtended> getFollowers(String email, String order) {
-        final String query = "SELECT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
-                " FROM user u JOIN following f ON u.id = f.follower_id" +
-                " WHERE f.followee_email = ? ORDER BY name " + order + ';';
+        final String query = "SELECT follower.id, follower.username, follower.name," +
+                " follower.email, follower.about, follower.anonymous" +
+                " FROM user as follower JOIN following f ON follower.id = f.follower_id " +
+                "JOIN user ON user.id = f.followee_id " +
+                " WHERE user.email = ? ORDER BY name " + order + ';';
+
         final List<User> users = template.query(query, userMapper, email);
-        final List<UserDetailsExtended> result = new ArrayList<>();
-
-        for (User user: users) {
-            final String getFollowers = "SELECT follower_email FROM following WHERE followee_id=?;";
-            final List<String> followers = template.queryForList(getFollowers, String.class, user.getId());
-
-            final String getFollowees = "SELECT followee_email FROM following WHERE follower_id=?;";
-            final List<String> followees = template.queryForList(getFollowees, String.class, user.getId());
-
-            final String getSubscriptions = "SELECT thread_id FROM subscription WHERE user_id = ?;";
-            final List<Long> subscriptions = template.queryForList(getSubscriptions, Long.class, user.getId());
-
-            user.setFollowers(new HashSet<>(followers));
-            user.setFollowing(new HashSet<>(followees));
-            user.setSubscriptions(new HashSet<>(subscriptions));
-            result.add(new UserDetailsExtended(user));
-        }
-        return result;
+        LOGGER.info("Getting followers for user {} is success", email);
+        return usersToUsersDetails(users);
     }
 
     @Override
     public List<UserDetailsExtended> getFollowers(String email, int sinceId, String order) {
-        final String query = "SELECT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
-                " FROM user u JOIN following f ON u.id = f.follower_id" +
-                " WHERE f.followee_email = ? AND u.id >= ? ORDER BY name " + order + ';';
+        final String query = "SELECT follower.id, follower.username," +
+                " follower.name, follower.email, follower.about, follower.anonymous" +
+                " FROM user as follower JOIN following f ON follower.id = f.follower_id " +
+                "JOIN user ON user.id = f.followee_id " +
+                " WHERE user.email = ? AND follower.id >= ? ORDER BY name " + order + ';';
+
         final List<User> users = template.query(query, userMapper, email, sinceId);
-        final List<UserDetailsExtended> result = new ArrayList<>();
-
-        for (User user: users) {
-            final String getFollowers = "SELECT follower_email FROM following WHERE followee_id=?;";
-            final List<String> followers = template.queryForList(getFollowers, String.class, user.getId());
-
-            final String getFollowees = "SELECT followee_email FROM following WHERE follower_id=?;";
-            final List<String> followees = template.queryForList(getFollowees, String.class, user.getId());
-
-            final String getSubscriptions = "SELECT thread_id FROM subscription WHERE user_id = ?;";
-            final List<Long> subscriptions = template.queryForList(getSubscriptions, Long.class, user.getId());
-
-            user.setFollowers(new HashSet<>(followers));
-            user.setFollowing(new HashSet<>(followees));
-            user.setSubscriptions(new HashSet<>(subscriptions));
-            result.add(new UserDetailsExtended(user));
-        }
-        return result;
+        LOGGER.info("Getting followers for user {} is success", email);
+        return usersToUsersDetails(users);
     }
 
     @Override
     public List<UserDetailsExtended> getFollowers(String email, String order, int limit) {
-        final String query = "SELECT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
-                " FROM user u JOIN following f ON u.id = f.follower_id" +
-                " WHERE f.followee_email = ? ORDER BY name " + order + " LIMIT ?;";
+        final String query = "SELECT follower.id, follower.username, follower.name, " +
+                "follower.email, follower.about, follower.anonymous" +
+                " FROM user as follower JOIN following f ON follower.id = f.follower_id " +
+                "JOIN user ON user.id = f.followee_id " +
+                " WHERE user.email = ? ORDER BY name " + order + " LIMIT ?";
+
         final List<User> users = template.query(query, userMapper, email, limit);
-        final List<UserDetailsExtended> result = new ArrayList<>();
-
-        for (User user: users) {
-            final String getFollowers = "SELECT follower_email FROM following WHERE followee_id=?;";
-            final List<String> followers = template.queryForList(getFollowers, String.class, user.getId());
-
-            final String getFollowees = "SELECT followee_email FROM following WHERE follower_id=?;";
-            final List<String> followees = template.queryForList(getFollowees, String.class, user.getId());
-
-            final String getSubscriptions = "SELECT thread_id FROM subscription WHERE user_id = ?;";
-            final List<Long> subscriptions = template.queryForList(getSubscriptions, Long.class, user.getId());
-
-            user.setFollowers(new HashSet<>(followers));
-            user.setFollowing(new HashSet<>(followees));
-            user.setSubscriptions(new HashSet<>(subscriptions));
-            result.add(new UserDetailsExtended(user));
-        }
-        return result;
+        LOGGER.info("Getting followers for user {} is success", email);
+        return usersToUsersDetails(users);
     }
 
     @Override
     public List<UserDetailsExtended> getFollowers(String email, int sinceId, String order, int limit) {
-        final String query = "SELECT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
-                " FROM user u JOIN following f ON u.id = f.follower_id" +
-                " WHERE f.followee_email = ? AND u.id >= ? ORDER BY name " + order + " LIMIT ?;";
+        final String query = "SELECT follower.id, follower.username, follower.name, follower.email," +
+                " follower.about, follower.anonymous" +
+                " FROM user as follower JOIN following f ON follower.id = f.follower_id " +
+                "JOIN user ON user.id = f.followee_id " +
+                " WHERE user.email = ? AND follower.id >= ? ORDER BY name " + order + " LIMIT ?";
+
         final List<User> users = template.query(query, userMapper, email, sinceId, limit);
-        final List<UserDetailsExtended> result = new ArrayList<>();
-
-        for (User user: users) {
-            final String getFollowers = "SELECT follower_email FROM following WHERE followee_id=?;";
-            final List<String> followers = template.queryForList(getFollowers, String.class, user.getId());
-
-            final String getFollowees = "SELECT followee_email FROM following WHERE follower_id=?;";
-            final List<String> followees = template.queryForList(getFollowees, String.class, user.getId());
-
-            final String getSubscriptions = "SELECT thread_id FROM subscription WHERE user_id = ?;";
-            final List<Long> subscriptions = template.queryForList(getSubscriptions, Long.class, user.getId());
-
-            user.setFollowers(new HashSet<>(followers));
-            user.setFollowing(new HashSet<>(followees));
-            user.setSubscriptions(new HashSet<>(subscriptions));
-            result.add(new UserDetailsExtended(user));
-        }
-        return result;
+        LOGGER.info("Getting followers for user {} is success", email);
+        return usersToUsersDetails(users);
     }
 
 
 
     @Override
     public List<UserDetailsExtended> getFollowees(String email, String order) {
-        final String query = "SELECT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
-                " FROM user u JOIN following f ON u.id = f.followee_id" +
-                " WHERE f.follower_email = ? ORDER BY name " + order + ';';
+        final String query = "SELECT followee.id, followee.username, followee.name, followee.email," +
+                " followee.about, followee.anonymous" +
+                " FROM user as followee JOIN following f ON followee.id = f.followee_id " +
+                "JOIN user ON user.id = f.follower_id " +
+                " WHERE user.email = ? ORDER BY name " + order + ';';
+
         final List<User> users = template.query(query, userMapper, email);
-        final List<UserDetailsExtended> result = new ArrayList<>();
-
-        for (User user: users) {
-            final String getFollowers = "SELECT follower_email FROM following WHERE followee_id=?;";
-            final List<String> followers = template.queryForList(getFollowers, String.class, user.getId());
-
-            final String getFollowees = "SELECT followee_email FROM following WHERE follower_id=?;";
-            final List<String> followees = template.queryForList(getFollowees, String.class, user.getId());
-
-            final String getSubscriptions = "SELECT thread_id FROM subscription WHERE user_id = ?;";
-            final List<Long> subscriptions = template.queryForList(getSubscriptions, Long.class, user.getId());
-
-            user.setFollowers(new HashSet<>(followers));
-            user.setFollowing(new HashSet<>(followees));
-            user.setSubscriptions(new HashSet<>(subscriptions));
-            result.add(new UserDetailsExtended(user));
-        }
-        return result;
+        LOGGER.info("Getting followees for user {} is success", email);
+        return usersToUsersDetails(users);
     }
 
     @Override
     public List<UserDetailsExtended> getFollowees(String email, int sinceId, String order) {
-        final String query = "SELECT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
-                " FROM user u JOIN following f ON u.id = f.followee_id" +
-                " WHERE f.follower_email = ? AND u.id >= ? ORDER BY name " + order + ';';
+        final String query = "SELECT followee.id, followee.username, followee.name, followee.email," +
+                " followee.about, followee.anonymous" +
+                " FROM user as followee JOIN following f ON followee.id = f.followee_id " +
+                "JOIN user ON user.id = f.follower_id " +
+                " WHERE user.email = ? AND followee.id >= ? ORDER BY name " + order + ';';
+
         final List<User> users = template.query(query, userMapper, email, sinceId);
-        final List<UserDetailsExtended> result = new ArrayList<>();
-
-        for (User user: users) {
-            final String getFollowers = "SELECT follower_email FROM following WHERE followee_id=?;";
-            final List<String> followers = template.queryForList(getFollowers, String.class, user.getId());
-
-            final String getFollowees = "SELECT followee_email FROM following WHERE follower_id=?;";
-            final List<String> followees = template.queryForList(getFollowees, String.class, user.getId());
-
-            final String getSubscriptions = "SELECT thread_id FROM subscription WHERE user_id = ?;";
-            final List<Long> subscriptions = template.queryForList(getSubscriptions, Long.class, user.getId());
-
-            user.setFollowers(new HashSet<>(followers));
-            user.setFollowing(new HashSet<>(followees));
-            user.setSubscriptions(new HashSet<>(subscriptions));
-            result.add(new UserDetailsExtended(user));
-        }
-        return result;
+        LOGGER.info("Getting followees for user {} is success", email);
+        return usersToUsersDetails(users);
     }
 
     @Override
     public List<UserDetailsExtended> getFollowees(String email, String order, int limit) {
-        final String query = "SELECT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
-                " FROM user u JOIN following f ON u.id = f.followee_id" +
-                " WHERE f.follower_email = ? ORDER BY name " + order + " LIMIT ?";
+        final String query = "SELECT followee.id, followee.username, followee.name, followee.email," +
+                " followee.about, followee.anonymous" +
+                " FROM user as followee JOIN following f ON followee.id = f.followee_id " +
+                "JOIN user ON user.id = f.follower_id " +
+                " WHERE user.email = ? ORDER BY name " + order + " LIMIT ?";
+
         final List<User> users = template.query(query, userMapper, email, limit);
-        final List<UserDetailsExtended> result = new ArrayList<>();
-
-        for (User user: users) {
-            final String getFollowers = "SELECT follower_email FROM following WHERE followee_id=?;";
-            final List<String> followers = template.queryForList(getFollowers, String.class, user.getId());
-
-            final String getFollowees = "SELECT followee_email FROM following WHERE follower_id=?;";
-            final List<String> followees = template.queryForList(getFollowees, String.class, user.getId());
-
-            final String getSubscriptions = "SELECT thread_id FROM subscription WHERE user_id = ?;";
-            final List<Long> subscriptions = template.queryForList(getSubscriptions, Long.class, user.getId());
-
-            user.setFollowers(new HashSet<>(followers));
-            user.setFollowing(new HashSet<>(followees));
-            user.setSubscriptions(new HashSet<>(subscriptions));
-            result.add(new UserDetailsExtended(user));
-        }
-        return result;
+        LOGGER.info("Getting followees for user {} is success", email);
+        return usersToUsersDetails(users);
     }
 
     @Override
     public List<UserDetailsExtended> getFollowees(String email, int sinceId, String order, int limit) {
-        final String query = "SELECT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
-                " FROM user u JOIN following f ON u.id = f.followee_id" +
-                " WHERE f.follower_email = ? AND u.id >= ? ORDER BY name " + order + " LIMIT ?";
+        final String query = "SELECT followee.id, followee.username, followee.name, followee.email," +
+        " followee.about, followee.anonymous" +
+                " FROM user as followee JOIN following f ON followee.id = f.followee_id " +
+                "JOIN user ON user.id = f.follower_id " +
+                " WHERE user.email = ? AND followee.id >= ? ORDER BY name " + order + " LIMIT ?";
+
         final List<User> users = template.query(query, userMapper, email, sinceId, limit);
-        final List<UserDetailsExtended> result = new ArrayList<>();
-
-        for (User user: users) {
-            final String getFollowers = "SELECT follower_email FROM following WHERE followee_id=?;";
-            final List<String> followers = template.queryForList(getFollowers, String.class, user.getId());
-
-            final String getFollowees = "SELECT followee_email FROM following WHERE follower_id=?;";
-            final List<String> followees = template.queryForList(getFollowees, String.class, user.getId());
-
-            final String getSubscriptions = "SELECT thread_id FROM subscription WHERE user_id = ?;";
-            final List<Long> subscriptions = template.queryForList(getSubscriptions, Long.class, user.getId());
-
-            user.setFollowers(new HashSet<>(followers));
-            user.setFollowing(new HashSet<>(followees));
-            user.setSubscriptions(new HashSet<>(subscriptions));
-            result.add(new UserDetailsExtended(user));
-        }
-        return result;
+        LOGGER.info("Getting followees for user {} is success", email);
+        return usersToUsersDetails(users);
     }
 
 
@@ -404,10 +291,11 @@ public class UserDAODataBaseImpl implements UserDAO {
         final String query = "UPDATE user SET name = ?, about = ? WHERE email = ?;";
         final int affectedRows = template.update(query, name, about, email);
         if (affectedRows == 0) {
-            logger.info("Error update user profile because user with email {} does not exist!", email);
+            LOGGER.info("Error update user profile because user with email {} does not exist!", email);
             return null;
         }
         final User user = getByEmail(email);
+        LOGGER.info("User profile has been updated (email {})", email);
         return new UserDetailsExtended(user);
     }
 
@@ -418,14 +306,16 @@ public class UserDAODataBaseImpl implements UserDAO {
             return null;
         }
         final Long userId = user.getId();
-        final String query = "INSERT INTO subscription (user_id, thread_id) VALUES (?, ?);";
+
         try {
+            final String query = "INSERT INTO subscription (user_id, thread_id) VALUES (?, ?);";
             template.update(query, userId, threadId);
         }
         catch (DuplicateKeyException e) {
-            logger.info("User {} already subscribed on thread with id={}!", email, threadId);
+            LOGGER.info("User {} already subscribed on thread with id={}!", email, threadId);
             return userId;
         }
+        LOGGER.info("User {} has subscribed on thread with id={}", email, threadId);
         return userId;
     }
 
@@ -439,7 +329,7 @@ public class UserDAODataBaseImpl implements UserDAO {
         final String query = "DELETE FROM subscription WHERE user_id=? AND thread_id=?;";
             template.update(query, userId, threadId);
 
-
+        LOGGER.info("User {} has unsubscribed fro, thread with id={}", email, threadId);
         return userId;
     }
 
@@ -470,24 +360,8 @@ public class UserDAODataBaseImpl implements UserDAO {
                 " FROM user u JOIN post p ON u.id = p.user_id JOIN forum f ON p.forum_id = f.id " +
                 " WHERE f.short_name = ? ORDER BY name " + order + ';';
         final List<User> users = template.query(query, userMapper, forumShortName);
-        final List<UserDetailsExtended> result = new ArrayList<>();
-
-        for (User user: users) {
-            final String getFollowers = "SELECT follower_email FROM following WHERE followee_id=?;";
-            final List<String> followers = template.queryForList(getFollowers, String.class, user.getId());
-
-            final String getFollowees = "SELECT followee_email FROM following WHERE follower_id=?;";
-            final List<String> followees = template.queryForList(getFollowees, String.class, user.getId());
-
-            final String getSubscriptions = "SELECT thread_id FROM subscription WHERE user_id = ?;";
-            final List<Long> subscriptions = template.queryForList(getSubscriptions, Long.class, user.getId());
-
-            user.setFollowers(new HashSet<>(followers));
-            user.setFollowing(new HashSet<>(followees));
-            user.setSubscriptions(new HashSet<>(subscriptions));
-            result.add(new UserDetailsExtended(user));
-        }
-        return result;
+        LOGGER.info("Getting users of forum {} is successful", forumShortName);
+        return usersToUsersDetails(users);
     }
 
 
@@ -496,25 +370,10 @@ public class UserDAODataBaseImpl implements UserDAO {
                 " FROM user u JOIN post p ON u.id = p.user_id JOIN forum f ON p.forum_id = f.id " +
                 " WHERE f.short_name = ? AND u.id >= ?  ORDER BY name " + order + ';';
         final List<User> users = template.query(query, userMapper, forumShortName, sinceId);
-        final List<UserDetailsExtended> result = new ArrayList<>();
-
-        for (User user: users) {
-            final String getFollowers = "SELECT follower_email FROM following WHERE followee_id=?;";
-            final List<String> followers = template.queryForList(getFollowers, String.class, user.getId());
-
-            final String getFollowees = "SELECT followee_email FROM following WHERE follower_id=?;";
-            final List<String> followees = template.queryForList(getFollowees, String.class, user.getId());
-
-            final String getSubscriptions = "SELECT thread_id FROM subscription WHERE user_id = ?;";
-            final List<Long> subscriptions = template.queryForList(getSubscriptions, Long.class, user.getId());
-
-            user.setFollowers(new HashSet<>(followers));
-            user.setFollowing(new HashSet<>(followees));
-            user.setSubscriptions(new HashSet<>(subscriptions));
-            result.add(new UserDetailsExtended(user));
-        }
-        return result;
+        LOGGER.info("Getting users of forum {} is successful", forumShortName);
+        return usersToUsersDetails(users);
     }
+
 
 
     public List<UserDetailsExtended> getUsersByForum(String forumShortName, Integer limit, String order) {
@@ -522,24 +381,8 @@ public class UserDAODataBaseImpl implements UserDAO {
                 " FROM user u JOIN post p ON u.id = p.user_id JOIN forum f ON p.forum_id = f.id " +
                 " WHERE f.short_name = ? ORDER BY name " + order + " LIMIT ?";
         final List<User> users = template.query(query, userMapper, forumShortName, limit);
-        final List<UserDetailsExtended> result = new ArrayList<>();
-
-        for (User user: users) {
-            final String getFollowers = "SELECT follower_email FROM following WHERE followee_id=?;";
-            final List<String> followers = template.queryForList(getFollowers, String.class, user.getId());
-
-            final String getFollowees = "SELECT followee_email FROM following WHERE follower_id=?;";
-            final List<String> followees = template.queryForList(getFollowees, String.class, user.getId());
-
-            final String getSubscriptions = "SELECT thread_id FROM subscription WHERE user_id = ?;";
-            final List<Long> subscriptions = template.queryForList(getSubscriptions, Long.class, user.getId());
-
-            user.setFollowers(new HashSet<>(followers));
-            user.setFollowing(new HashSet<>(followees));
-            user.setSubscriptions(new HashSet<>(subscriptions));
-            result.add(new UserDetailsExtended(user));
-        }
-        return result;
+        LOGGER.info("Getting users of forum {} is successful", forumShortName);
+        return usersToUsersDetails(users);
     }
 
     @Override
@@ -548,28 +391,41 @@ public class UserDAODataBaseImpl implements UserDAO {
                 " FROM user u JOIN post p ON u.id = p.user_id JOIN forum f ON p.forum_id = f.id" +
                 " WHERE f.short_name = ? AND u.id >= ?  ORDER BY name " + order + " LIMIT ?";
         final List<User> users = template.query(query, userMapper, forumShortName, sinceId, limit);
+        LOGGER.info("Getting users of forum {} is successful", forumShortName);
+        return usersToUsersDetails(users);
+    }
+
+
+
+    private List<UserDetailsExtended> usersToUsersDetails (Iterable<User> users) {
         final List<UserDetailsExtended> result = new ArrayList<>();
-
         for (User user: users) {
-            final String getFollowers = "SELECT follower_email FROM following WHERE followee_id=?;";
-            final List<String> followers = template.queryForList(getFollowers, String.class, user.getId());
-
-            final String getFollowees = "SELECT followee_email FROM following WHERE follower_id=?;";
-            final List<String> followees = template.queryForList(getFollowees, String.class, user.getId());
-
-            final String getSubscriptions = "SELECT thread_id FROM subscription WHERE user_id = ?;";
-            final List<Long> subscriptions = template.queryForList(getSubscriptions, Long.class, user.getId());
-
-            user.setFollowers(new HashSet<>(followers));
-            user.setFollowing(new HashSet<>(followees));
-            user.setSubscriptions(new HashSet<>(subscriptions));
+            user.setFollowers(loadFollowers(user.getId()));
+            user.setFollowees(loadFollowees(user.getId()));
+            user.setSubscriptions(loadSubscriptions(user.getId()));
             result.add(new UserDetailsExtended(user));
         }
         return result;
     }
 
+    private List<String> loadFollowers (long followeeId) {
+        final String getFollowers = "SELECT u.email FROM user as u JOIN following f " +
+                "ON u.id = f.follower_id WHERE followee_id = ?;";
+        return template.queryForList(getFollowers, String.class, followeeId);
+    }
 
-    RowMapper<User> userMapper = (rs, rowNum) -> {
+    private List<String> loadFollowees (long followerId) {
+        final String getFollowees = "SELECT u.email FROM user as u JOIN following f " +
+                "ON u.id = f.followee_id WHERE follower_id = ?;";
+        return template.queryForList(getFollowees, String.class, followerId);
+    }
+
+    private List<Long> loadSubscriptions(long userId) {
+        final String getSubscriptions = "SELECT thread_id FROM subscription WHERE user_id = ?;";
+        return template.queryForList(getSubscriptions, Long.class, userId);
+    }
+
+    private final RowMapper<User> userMapper = (rs, rowNum) -> {
         final String username = rs.getString("username");
         final String name = rs.getString("name");
         final String eMail = rs.getString("email");

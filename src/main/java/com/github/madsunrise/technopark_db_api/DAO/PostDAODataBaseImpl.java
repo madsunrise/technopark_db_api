@@ -31,7 +31,7 @@ import java.util.Map;
 public class PostDAODataBaseImpl implements PostDAO {
 
     private final JdbcTemplate template;
-    private static final Logger logger = LoggerFactory.getLogger(PostDAODataBaseImpl.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostDAODataBaseImpl.class.getName());
     public PostDAODataBaseImpl(JdbcTemplate template) {
         this.template = template;
     }
@@ -47,7 +47,7 @@ public class PostDAODataBaseImpl implements PostDAO {
     public void clear() {
         final String dropTable = "DROP TABLE IF EXISTS post";
         template.execute(dropTable);
-        logger.info("Table post was dropped");
+        LOGGER.info("Table post was dropped");
     }
 
     @Override
@@ -75,7 +75,7 @@ public class PostDAODataBaseImpl implements PostDAO {
                 "FOREIGN KEY (thread_id) REFERENCES thread(id)) CHARACTER SET utf8" +
                 " DEFAULT COLLATE utf8_general_ci;";
         template.execute(createTable);
-        logger.info("Table post was created");
+        LOGGER.info("Table post was created");
     }
 
     @Override
@@ -101,12 +101,12 @@ public class PostDAODataBaseImpl implements PostDAO {
     public PostDetails create(LocalDateTime date, long threadId, String message, String userEmail, String forumShortName, Long parent, boolean approved, boolean highlighted, boolean edited, boolean spam, boolean deleted) {
         final Forum forum = forumDAODataBase.getByShortName(forumShortName);
         if (forum == null) {
-            logger.info("Error creating post because forum \"{}\" does not exist!", forumShortName);
+            LOGGER.info("Error creating post because forum \"{}\" does not exist!", forumShortName);
             return null;
         }
         final User user = userDAODataBase.getByEmail(userEmail);
         if (user == null) {
-            logger.info("Error creating post because user \"{}\" does not exist!", userEmail);
+            LOGGER.info("Error creating post because user \"{}\" does not exist!", userEmail);
             return null;
         }
 
@@ -119,14 +119,14 @@ public class PostDAODataBaseImpl implements PostDAO {
             template.update(new PostPstCreator(post), keyHolder);
         }
         catch (DuplicateKeyException e) {
-            logger.info("Error creating post because it already exists!");
+            LOGGER.info("Error creating post because it already exists!");
             return null;
         }
 
         final Map<String, Object> keys = keyHolder.getKeys();
         post.setId((Long)keys.get("GENERATED_KEY"));
 
-        logger.info("Post with id={} successful created", post.getId());
+        LOGGER.info("Post with id={} successful created", post.getId());
         threadDAODataBase.addPost(threadId);
 
         final PostDetails<String, String, Long> postDetails = new PostDetails<>(post);
@@ -245,7 +245,7 @@ public class PostDAODataBaseImpl implements PostDAO {
     public PostDetailsExtended getDetails(long id, List<String> related) {
         final Post post = getById(id);
         if (post == null) {
-            logger.info("Error getting post details - post with ID={}: does not exist!", id);
+            LOGGER.info("Error getting post details - post with ID={}: does not exist!", id);
             return null;
         }
         final PostDetailsExtended result = new PostDetailsExtended(post);
@@ -274,7 +274,7 @@ public class PostDAODataBaseImpl implements PostDAO {
             result.setThread(post.getThreadId());
         }
 
-        logger.info("Getting post (ID={}) details is success", id);
+        LOGGER.info("Getting post (ID={}) details is success", id);
         return result;
     }
 
@@ -499,12 +499,12 @@ public class PostDAODataBaseImpl implements PostDAO {
         final String query = "UPDATE post SET deleted=? WHERE id=?;";
         final int affectedRows = template.update(query, true, postId);
         if (affectedRows == 0) {
-            logger.info("Removing post with ID={} failed", postId);
+            LOGGER.info("Removing post with ID={} failed", postId);
             return false;
         }
         final Post post = getById(postId);
         threadDAODataBase.removePost(post.getThreadId());
-        logger.info("Removed post with ID={}", postId);
+        LOGGER.info("Removed post with ID={}", postId);
         return true;
     }
 
@@ -513,12 +513,12 @@ public class PostDAODataBaseImpl implements PostDAO {
         final String query = "UPDATE post SET deleted=? WHERE id=?;";
         final int affectedRows = template.update(query, false, postId);
         if (affectedRows == 0) {
-            logger.info("Restoring post with ID={} failed", postId);
+            LOGGER.info("Restoring post with ID={} failed", postId);
             return false;
         }
         final Post post = getById(postId);
         threadDAODataBase.addPost(post.getThreadId());
-        logger.info("Restored post with ID={}", postId);
+        LOGGER.info("Restored post with ID={}", postId);
         return true;
     }
 
@@ -547,7 +547,7 @@ public class PostDAODataBaseImpl implements PostDAO {
         }
         final int affectedRows = template.update(query, postId);
         if (affectedRows == 0) {
-            logger.info("Error vote because post with ID={} does not exist!", postId);
+            LOGGER.info("Error vote because post with ID={} does not exist!", postId);
             return null;
         }
         final Post post = getById(postId);
@@ -559,7 +559,7 @@ public class PostDAODataBaseImpl implements PostDAO {
         final String query = "UPDATE post SET message=? WHERE id=?;";
         final int affectedRows = template.update(query, message, postId);
         if (affectedRows == 0) {
-            logger.info("Error update post because post with ID={} does not exist!", postId);
+            LOGGER.info("Error update post because post with ID={} does not exist!", postId);
             return null;
         }
         final Post post = getById(postId);

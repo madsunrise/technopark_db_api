@@ -26,9 +26,9 @@ public class UserDetailsExtended extends UserDetails {
 
     public UserDetailsExtended(User user) {
         super(user);
-        this.followers.addAll(user.getFollowers());
-        this.following.addAll(user.getFollowees());
-        this.subscriptions.addAll(user.getSubscriptions());
+        this.followers = user.getFollowers();
+        this.following = user.getFollowees();
+        this.subscriptions = user.getSubscriptions();
     }
 
     public List<String> getFollowers() {

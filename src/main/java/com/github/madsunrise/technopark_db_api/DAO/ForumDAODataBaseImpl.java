@@ -34,7 +34,7 @@ import java.util.Map;
 public class ForumDAODataBaseImpl implements ForumDAO {
 
     private final JdbcTemplate template;
-    private static final Logger logger = LoggerFactory.getLogger(ForumDAODataBaseImpl.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(ForumDAODataBaseImpl.class.getName());
     public ForumDAODataBaseImpl(JdbcTemplate template) {
         this.template = template;
     }
@@ -51,7 +51,7 @@ public class ForumDAODataBaseImpl implements ForumDAO {
     public void clear() {
         final String dropTable = "DROP TABLE IF EXISTS forum";
         template.execute(dropTable);
-        logger.info("Table forum was dropped");
+        LOGGER.info("Table forum was dropped");
     }
     @Override
     public void createTable() {
@@ -64,7 +64,7 @@ public class ForumDAODataBaseImpl implements ForumDAO {
                 "FOREIGN KEY (user_id) REFERENCES user(id)) CHARACTER SET utf8" +
                 " DEFAULT COLLATE utf8_general_ci;";
         template.execute(createTable);
-        logger.info("Table forum was created");
+        LOGGER.info("Table forum was created");
     }
 
     @Override
@@ -99,7 +99,7 @@ public class ForumDAODataBaseImpl implements ForumDAO {
     public ForumDetails create(String name, String shortName, String userEmail) {
         final User user = userDAODataBase.getByEmail(userEmail);
         if (user == null) {
-            logger.info("Error creating forum because user \"{}\" does not exist!", userEmail);
+            LOGGER.info("Error creating forum because user \"{}\" does not exist!", userEmail);
             return null;
         }
 
@@ -109,12 +109,12 @@ public class ForumDAODataBaseImpl implements ForumDAO {
             template.update(new ForumPstCreator(forum), keyHolder);
         }
         catch (DuplicateKeyException e) {
-            logger.info("Error creating forum \"{}\" - it already exists!", shortName);
+            LOGGER.info("Error creating forum \"{}\" - it already exists!", shortName);
             return null;
         }
         final Map<String, Object> keys = keyHolder.getKeys();
         forum.setId((Long)keys.get("GENERATED_KEY"));
-        logger.info("Forum \"{}\" successful created", shortName);
+        LOGGER.info("Forum \"{}\" successful created", shortName);
         return new ForumDetails(forum);
     }
 
@@ -147,11 +147,11 @@ public class ForumDAODataBaseImpl implements ForumDAO {
     public ForumDetails getDetails(String shortName, List<String> related) {
         final Forum forum = getByShortName(shortName);
         if (forum == null) {
-            logger.info("Error getting forum details because forum \"{}\": does not exist!", shortName);
+            LOGGER.info("Error getting forum details because forum \"{}\": does not exist!", shortName);
             return null;
         }
 
-        logger.info("Getting forum details \"{}\" is success", shortName);
+        LOGGER.info("Getting forum details \"{}\" is success", shortName);
         if (related != null && related.contains("user")) {
             final User user = userDAODataBase.getByEmail(forum.getUser());
             final UserDetailsExtended userDetails = new UserDetailsExtended(user);
