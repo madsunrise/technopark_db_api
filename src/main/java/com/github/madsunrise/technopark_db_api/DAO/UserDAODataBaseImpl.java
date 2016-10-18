@@ -58,7 +58,8 @@ public class UserDAODataBaseImpl implements UserDAO {
 
     @Override
     public long getAmount() {
-        return 0;
+        final String query = "SELECT COUNT(*) FROM user;";
+        return template.queryForObject(query, Long.class);
     }
 
 

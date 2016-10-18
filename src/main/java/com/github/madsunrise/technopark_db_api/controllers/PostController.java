@@ -2,6 +2,7 @@ package com.github.madsunrise.technopark_db_api.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.madsunrise.technopark_db_api.Codes;
+import com.github.madsunrise.technopark_db_api.DAO.ForumDAODataBaseImpl;
 import com.github.madsunrise.technopark_db_api.DAO.PostDAO;
 import com.github.madsunrise.technopark_db_api.DAO.PostDAODataBaseImpl;
 import com.github.madsunrise.technopark_db_api.DAO.PostDAOImpl;
@@ -23,9 +24,11 @@ import java.util.List;
 public class PostController {
 
     private final PostDAODataBaseImpl postDAODataBase;
+    private final ForumDAODataBaseImpl forumDAODataBase;
 
-    public PostController(PostDAODataBaseImpl postDAODataBase) {
+    public PostController(PostDAODataBaseImpl postDAODataBase, ForumDAODataBaseImpl forumDAODataBase) {
         this.postDAODataBase = postDAODataBase;
+        this.forumDAODataBase = forumDAODataBase;
     }
 
     @RequestMapping(path = "/db/api/post/create", method = RequestMethod.POST)
@@ -82,7 +85,7 @@ public class PostController {
 
         final List<PostDetailsExtended> result;
         if (forumShortName != null) {
-            result = postDAODataBase.getPostsByForum(forumShortName, since, limit, order);
+            result = forumDAODataBase.getPosts(forumShortName, since, limit, order, null);
         } else {
             result = postDAODataBase.getPostsByThread(threadId, since, limit, order);
         }

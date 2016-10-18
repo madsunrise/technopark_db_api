@@ -12,11 +12,6 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 public class MainController {
-    private final UserDAO userDAO = new UserDAOImpl();
-    private final ForumDAO forumDAO = new ForumDAOImpl();
-    private final ThreadDAO threadDAO = new ThreadDAOImpl();
-    private final PostDAO postDAO = new PostDAOImpl();
-
     private final MainService mainService;
 
     public MainController(MainService mainService) {
@@ -29,11 +24,6 @@ public class MainController {
     @ResponseBody
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse details() {
-        postDAO.clear();
-        threadDAO.clear();
-        forumDAO.clear();
-        userDAO.clear();
-
         mainService.clear();
         return new CustomResponse<>(Codes.OK, "OK");
     }
@@ -42,10 +32,10 @@ public class MainController {
     @ResponseBody
     @ResponseStatus(HttpStatus.OK)
     public CustomResponse status() {
-        long postCount = postDAO.getAmount();
-        long threadCount = threadDAO.getAmount();
-        long forumCount = forumDAO.getAmount();
-        long userCount = userDAO.getAmount();
+        long postCount = mainService.getPostAmount();
+        long threadCount = mainService.getThreadAmount();
+        long forumCount = mainService.getForumAmount();
+        long userCount = mainService.getUserAmount();
         StatusResponse result = new StatusResponse(userCount, threadCount, forumCount, postCount);
         return new CustomResponse<>(Codes.OK, result);
     }

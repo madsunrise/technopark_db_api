@@ -77,7 +77,8 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
 
     @Override
     public long getAmount() {
-        return 0;
+        final String query = "SELECT COUNT(*) FROM thread;";
+        return template.queryForObject(query, Long.class);
     }
 
     @Override

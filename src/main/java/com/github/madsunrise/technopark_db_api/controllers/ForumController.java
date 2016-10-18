@@ -20,7 +20,6 @@ import java.util.List;
 @RestController
 public class ForumController {
     private final ForumDAODataBaseImpl forumDAODataBase;
-    private final ForumDAO forumDAO = new ForumDAOImpl();
 
     public ForumController(ForumDAODataBaseImpl forumDAODataBase) {
         this.forumDAODataBase = forumDAODataBase;
@@ -76,7 +75,7 @@ public class ForumController {
             since = LocalDateTime.parse(sinceStr, formatter);
         }
 
-        final List<PostDetailsExtended> result = forumDAO.getPosts(forumShortName, since, limit, order, related);
+        final List<PostDetailsExtended> result = forumDAODataBase.getPosts(forumShortName, since, limit, order, related);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Not found");
         }
@@ -102,7 +101,7 @@ public class ForumController {
             return new CustomResponse<>(Codes.INCORRECT_REQUEST, "\'thread\' GET-parametr...?");
         }
 
-        final List<ThreadDetailsExtended> result = forumDAO.getThreads(forumShortName, since, limit, order, related);
+        final List<ThreadDetailsExtended> result = forumDAODataBase.getThreads(forumShortName, since, limit, order, related);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Not found");
         }
@@ -118,7 +117,7 @@ public class ForumController {
                                       @RequestParam(value = "since_id", required = false) Long sinceId){
 
 
-        final List<UserDetailsExtended> result = forumDAO.getUsers(forumShortName, sinceId, limit, order);
+        final List<UserDetailsExtended> result = forumDAODataBase.getUsers(forumShortName, sinceId, limit, order);
         if (result == null) {
             return new CustomResponse<>(Codes.NOT_FOUND, "Not found");
         }

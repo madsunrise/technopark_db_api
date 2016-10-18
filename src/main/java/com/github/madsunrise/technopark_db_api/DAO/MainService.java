@@ -84,4 +84,20 @@ public class MainService {
         final String dropTable = "DROP TABLE IF EXISTS following";
         template.execute(dropTable);
     }
+
+    public long getUserAmount() {
+        return userDAO.getAmount();
+    }
+
+    public long getForumAmount() {
+        return forumDAO.getAmount();
+    }
+
+    public long getThreadAmount() {
+        return threadDAO.getAmount();
+    }
+
+    public long getPostAmount() {
+        return postDAO.getAmount();
+    }
 }

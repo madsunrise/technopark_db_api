@@ -130,7 +130,7 @@ public class PostDAOImpl implements PostDAO {
     }
 
 
-    @Override
+
     public List<PostDetailsExtended> getPostsByForum(String forumShortName,
                                                      LocalDateTime since, Integer limit, String order) {
         return this.getPostsByForum(forumShortName, since, limit, order, null);

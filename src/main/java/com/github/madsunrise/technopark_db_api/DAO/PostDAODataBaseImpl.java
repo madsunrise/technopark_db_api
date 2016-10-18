@@ -12,6 +12,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -79,7 +81,8 @@ public class PostDAODataBaseImpl implements PostDAO {
 
     @Override
     public long getAmount() {
-        return 0;
+        final String query = "SELECT COUNT(*) FROM post;";
+        return template.queryForObject(query, Long.class);
     }
 
     @Override
@@ -87,29 +90,7 @@ public class PostDAODataBaseImpl implements PostDAO {
         try {
             return template.queryForObject(
                     "SELECT * FROM post WHERE id = ?",
-                    (rs, rowNum) -> {
-                        final String message = rs.getString("message");
-                        final Timestamp timestamp= rs.getTimestamp("date");
-                        final LocalDateTime date = timestamp.toLocalDateTime();
-                        final Long threadId = rs.getLong("thread_id");
-                        final String user = rs.getString("user");
-                        final long userId = rs.getLong("user_id");
-                        final String forum = rs.getString("forum");
-                        final long forumId = rs.getLong("forum_id");
-                        final String path = rs.getString("path");
-                        final Long parent =(Long) rs.getObject("parent");
-                        final boolean approved = rs.getBoolean("approved");
-                        final boolean highlighted = rs.getBoolean("highlighted");
-                        final boolean edited = rs.getBoolean("edited");
-                        final boolean spam = rs.getBoolean("spam");
-                        final boolean deleted = rs.getBoolean("deleted");
-                        final long id = rs.getLong("id");
-                        final Post result = new Post(message, date, threadId, user, userId, forum, forumId, parent,
-                                approved, highlighted, edited, spam, deleted);
-                        result.setPath(path);
-                        result.setId(id);
-                        return result;
-                    }, postId);
+                    postMapper, postId);
         }
         catch (EmptyResultDataAccessException e) {
             return null;
@@ -298,15 +279,156 @@ public class PostDAODataBaseImpl implements PostDAO {
         return result;
     }
 
-    @Override
-    public List<PostDetailsExtended> getPostsByForum(String forumShortName, LocalDateTime since, Integer limit, String order) {
-        return null;
-    }
+
+
+
 
     @Override
-    public List<PostDetailsExtended> getPostsByForum(String forumShortName, LocalDateTime since, Integer limit, String order, List<String> related) {
-        return null;
+    public List<PostDetailsExtended> getPostsByForum(String forumShortName, LocalDateTime since,
+                                                     Integer limit, String order, List<String> related) {
+        final String query = "SELECT * FROM post WHERE forum=? AND date >= ? ORDER BY date " + order + " LIMIT ?;";
+        final Timestamp sinceTsmp = Timestamp.valueOf(since);
+        final List<Post> posts = template.query(query, postMapper,
+                forumShortName, sinceTsmp, limit);
+
+        final List<PostDetailsExtended> result = new ArrayList<>();
+        for (Post post: posts) {
+            final PostDetailsExtended details = new PostDetailsExtended(post);
+            if (related != null && related.contains("forum")) {
+                final ForumDetails forumDetails = forumDAODataBase.getDetails(post.getForum(), null);
+                details.setForum(forumDetails);
+            } else {
+                details.setForum(forumShortName);
+            }
+
+            if (related != null && related.contains("thread")) {
+                final ThreadDetailsExtended threadDetails = threadDAODataBase.getDetails(post.getThreadId());
+                details.setThread(threadDetails);
+            } else {
+                details.setThread(post.getThreadId());
+            }
+
+            if (related != null && related.contains("user")) {
+                final UserDetailsExtended userDetails = userDAODataBase.getDetails(post.getUser());
+                details.setUser(userDetails);
+            } else {
+                details.setUser(post.getUser());
+            }
+            result.add(details);
+        }
+
+        return result;
     }
+
+    public List<PostDetailsExtended> getPostsByForum(String forumShortName, Integer limit,
+                                                     String order, List<String> related) {
+        final String query = "SELECT * FROM post WHERE forum=? ORDER BY date " + order + " LIMIT ?;";
+        final List<Post> posts = template.query(query, postMapper,
+                forumShortName, limit);
+
+        final List<PostDetailsExtended> result = new ArrayList<>();
+        for (Post post: posts) {
+            final PostDetailsExtended details = new PostDetailsExtended(post);
+            if (related != null && related.contains("forum")) {
+                final ForumDetails forumDetails = forumDAODataBase.getDetails(post.getForum(), null);
+                details.setForum(forumDetails);
+            } else {
+                details.setForum(forumShortName);
+            }
+
+            if (related != null && related.contains("thread")) {
+                final ThreadDetailsExtended threadDetails = threadDAODataBase.getDetails(post.getThreadId());
+                details.setThread(threadDetails);
+            } else {
+                details.setThread(post.getThreadId());
+            }
+
+            if (related != null && related.contains("user")) {
+                final UserDetailsExtended userDetails = userDAODataBase.getDetails(post.getUser());
+                details.setUser(userDetails);
+            } else {
+                details.setUser(post.getUser());
+            }
+            result.add(details);
+        }
+
+        return result;
+    }
+
+    public List<PostDetailsExtended> getPostsByForum(String forumShortName, LocalDateTime since,
+                                                     String order, List<String> related) {
+        final String query = "SELECT * FROM post WHERE forum=? AND date >= ? ORDER BY date " + order + ';';
+        final Timestamp sinceTsmp = Timestamp.valueOf(since);
+        final List<Post> posts = template.query(query, postMapper,
+                forumShortName, sinceTsmp);
+
+        final List<PostDetailsExtended> result = new ArrayList<>();
+        for (Post post: posts) {
+            final PostDetailsExtended details = new PostDetailsExtended(post);
+            if (related != null && related.contains("forum")) {
+                final ForumDetails forumDetails = forumDAODataBase.getDetails(post.getForum(), null);
+                details.setForum(forumDetails);
+            } else {
+                details.setForum(forumShortName);
+            }
+
+            if (related != null && related.contains("thread")) {
+                final ThreadDetailsExtended threadDetails = threadDAODataBase.getDetails(post.getThreadId());
+                details.setThread(threadDetails);
+            } else {
+                details.setThread(post.getThreadId());
+            }
+
+            if (related != null && related.contains("user")) {
+                final UserDetailsExtended userDetails = userDAODataBase.getDetails(post.getUser());
+                details.setUser(userDetails);
+            } else {
+                details.setUser(post.getUser());
+            }
+            result.add(details);
+        }
+
+        return result;
+    }
+
+    public List<PostDetailsExtended> getPostsByForum(String forumShortName,
+                                                     String order, List<String> related) {
+        final String query = "SELECT * FROM post WHERE forum=? ORDER BY date " + order + ';';
+        final List<Post> posts = template.query(query, postMapper,
+                forumShortName);
+
+        final List<PostDetailsExtended> result = new ArrayList<>();
+        for (Post post: posts) {
+            final PostDetailsExtended details = new PostDetailsExtended(post);
+            if (related != null && related.contains("forum")) {
+                final ForumDetails forumDetails = forumDAODataBase.getDetails(post.getForum(), null);
+                details.setForum(forumDetails);
+            } else {
+                details.setForum(forumShortName);
+            }
+
+            if (related != null && related.contains("thread")) {
+                final ThreadDetailsExtended threadDetails = threadDAODataBase.getDetails(post.getThreadId());
+                details.setThread(threadDetails);
+            } else {
+                details.setThread(post.getThreadId());
+            }
+
+            if (related != null && related.contains("user")) {
+                final UserDetailsExtended userDetails = userDAODataBase.getDetails(post.getUser());
+                details.setUser(userDetails);
+            } else {
+                details.setUser(post.getUser());
+            }
+            result.add(details);
+        }
+
+        return result;
+    }
+
+
+
+
 
     @Override
     public List<PostDetailsExtended> getPostsByThread(long threadId, LocalDateTime since, Integer limit, String order) {
@@ -347,4 +469,52 @@ public class PostDAODataBaseImpl implements PostDAO {
     public PostDetailsExtended update(long postId, String message) {
         return null;
     }
+
+
+    RowMapper<Post> postMapper = (rs, i) -> {
+            final String message = rs.getString("message");
+            final Timestamp timestamp= rs.getTimestamp("date");
+            final LocalDateTime date = timestamp.toLocalDateTime();
+            final Long threadId = rs.getLong("thread_id");
+            final String user = rs.getString("user");
+            final long userId = rs.getLong("user_id");
+            final String forum = rs.getString("forum");
+            final long forumId = rs.getLong("forum_id");
+            final String path = rs.getString("path");
+            final Long parent =(Long) rs.getObject("parent");
+            final boolean approved = rs.getBoolean("approved");
+            final boolean highlighted = rs.getBoolean("highlighted");
+            final boolean edited = rs.getBoolean("edited");
+            final boolean spam = rs.getBoolean("spam");
+            final boolean deleted = rs.getBoolean("deleted");
+            final long id = rs.getLong("id");
+            final Post result = new Post(message, date, threadId, user, userId, forum, forumId, parent,
+                    approved, highlighted, edited, spam, deleted);
+            result.setPath(path);
+            result.setId(id);
+            return result;
+        };
+    RowMapper<PostDetailsExtended> postDetailsExtMapper = (rs, i) -> {
+        final String message = rs.getString("message");
+        final Timestamp timestamp= rs.getTimestamp("date");
+        final LocalDateTime date = timestamp.toLocalDateTime();
+        final Long threadId = rs.getLong("thread_id");
+        final String user = rs.getString("user");
+        final long userId = rs.getLong("user_id");
+        final String forum = rs.getString("forum");
+        final long forumId = rs.getLong("forum_id");
+        final String path = rs.getString("path");
+        final Long parent =(Long) rs.getObject("parent");
+        final boolean approved = rs.getBoolean("approved");
+        final boolean highlighted = rs.getBoolean("highlighted");
+        final boolean edited = rs.getBoolean("edited");
+        final boolean spam = rs.getBoolean("spam");
+        final boolean deleted = rs.getBoolean("deleted");
+        final long id = rs.getLong("id");
+        final Post post = new Post(message, date, threadId, user, userId, forum, forumId, parent,
+                approved, highlighted, edited, spam, deleted);
+        post.setPath(path);
+        post.setId(id);
+        return new PostDetailsExtended(post);
+    };
 }

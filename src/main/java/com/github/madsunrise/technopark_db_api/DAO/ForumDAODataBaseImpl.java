@@ -41,6 +41,10 @@ public class ForumDAODataBaseImpl implements ForumDAO {
 
     @Autowired
     private UserDAODataBaseImpl userDAODataBase;
+    @Autowired
+    private ThreadDAODataBaseImpl threadDAODataBase;
+    @Autowired
+    private PostDAODataBaseImpl postDAODataBase;
 
 
     @Override
@@ -65,7 +69,8 @@ public class ForumDAODataBaseImpl implements ForumDAO {
 
     @Override
     public long getAmount() {
-        return 0;
+        final String query = "SELECT COUNT(*) FROM forum;";
+        return template.queryForObject(query, Long.class);
     }
 
 
@@ -158,8 +163,24 @@ public class ForumDAODataBaseImpl implements ForumDAO {
 
 
     @Override
-    public List<PostDetailsExtended> getPosts(String shortName, LocalDateTime since, Integer limit, String order, List<String> related) {
-        return null;
+    public List<PostDetailsExtended> getPosts(String shortName, LocalDateTime since,
+                                              Integer limit, String order, List<String> related) {
+        if (since == null) {
+            if (limit == null) {
+                return postDAODataBase.getPostsByForum(shortName, order, related);
+            }
+            else {
+                return postDAODataBase.getPostsByForum(shortName, since, order, related);
+            }
+        }
+        else {
+            if (limit == null) {
+                return postDAODataBase.getPostsByForum(shortName, since, order, related);
+            }
+            else {
+                return postDAODataBase.getPostsByForum(shortName, since, limit, order,related);
+            }
+        }
     }
 
     @Override
