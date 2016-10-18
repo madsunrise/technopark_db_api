@@ -53,7 +53,8 @@ public class MainService {
                 "thread_id BIGINT NOT NULL," +
                 "FOREIGN KEY (user_id) REFERENCES user(id)," +
                 "FOREIGN KEY (thread_id) REFERENCES thread(id)," +
-                "PRIMARY KEY (user_id, thread_id));";
+                "PRIMARY KEY (user_id, thread_id)) CHARACTER SET utf8" +
+                " DEFAULT COLLATE utf8_general_ci;";
         template.execute(createTable);
     }
 
@@ -65,7 +66,8 @@ public class MainService {
                 "followee_email VARCHAR(30) NOT NULL," +
                 "FOREIGN KEY (follower_id) REFERENCES user(id)," +
                 "FOREIGN KEY (followee_id) REFERENCES user(id)," +
-                "PRIMARY KEY (follower_id, followee_id));";
+                "PRIMARY KEY (follower_id, followee_id)) CHARACTER SET utf8" +
+                " DEFAULT COLLATE utf8_general_ci;";
         template.execute(createTable);
     }
 
