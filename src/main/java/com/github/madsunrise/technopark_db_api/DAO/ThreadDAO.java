@@ -22,7 +22,6 @@ public interface ThreadDAO {
     void clear();
     void createTable();
     long getAmount();
-    long save (Thread thread);
     void addPost(long threadId);
     boolean remove (long threadId);
     boolean restore (long threadId);

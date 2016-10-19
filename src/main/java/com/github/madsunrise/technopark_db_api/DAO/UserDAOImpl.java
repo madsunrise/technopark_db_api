@@ -26,16 +26,16 @@ import java.util.*;
  */
 @Service
 @Transactional
-public class UserDAODataBaseImpl implements UserDAO {
+public class UserDAOImpl implements UserDAO {
 
     private final JdbcTemplate template;
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserDAODataBaseImpl.class.getName());
-    public UserDAODataBaseImpl(JdbcTemplate template) {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserDAOImpl.class.getName());
+    public UserDAOImpl(JdbcTemplate template) {
         this.template = template;
     }
 
     @Autowired
-    private PostDAODataBaseImpl postDAODataBase;
+    private PostDAOImpl postDAODataBase;
 
     @Override
     public void clear() {
@@ -121,7 +121,7 @@ public class UserDAODataBaseImpl implements UserDAO {
             @Override
             public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
                 final String query = "INSERT INTO user (username, name, email, about, anonymous) VALUES (?,?,?,?,?);";
-                PreparedStatement pst = con.prepareStatement(query,
+                final PreparedStatement pst = con.prepareStatement(query,
                         Statement.RETURN_GENERATED_KEYS);
                 pst.setString(1, user.getUsername());
                 pst.setString(2, user.getName());
@@ -131,6 +131,19 @@ public class UserDAODataBaseImpl implements UserDAO {
                 return pst;
             }
         }
+
+
+    public UserDetailsExtended getDetails(long userId) {
+        final User user = getById(userId);
+        if (user == null) {
+            LOGGER.info("Error getting user details - user with ID=\"{}\" does not exist!", userId);
+            return null;
+        }
+        LOGGER.info("Getting user with ID=\"{}\" details is success", userId);
+        return new UserDetailsExtended(user);
+
+    }
+
 
     @Override
     public UserDetailsExtended getDetails(String email) {

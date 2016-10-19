@@ -14,9 +14,7 @@ public class Post {
     private String message;
     private LocalDateTime date;
     private long threadId;
-    private String user;
     private long userId;
-    private String forum;
     private long forumId;
     private Long parent;
     private boolean approved;
@@ -30,17 +28,12 @@ public class Post {
 
     private String path;
 
-
-    private static final AtomicLong ID_GENETATOR = new AtomicLong(0);
-
-    public Post(String message, LocalDateTime date, long threadId, String user, long userId, String forum, long forumId,
+    public Post(String message, LocalDateTime date, long threadId, long userId, long forumId,
                 Long parent, boolean approved, boolean highlighted, boolean edited, boolean spam, boolean deleted) {
         this.message = message;
         this.date = date;
         this.threadId = threadId;
-        this.user = user;
         this.userId = userId;
-        this.forum = forum;
         this.forumId = forumId;
         this.parent = parent;
         this.approved = approved;
@@ -48,7 +41,6 @@ public class Post {
         this.edited = edited;
         this.spam = spam;
         this.deleted = deleted;
-        this.id = ID_GENETATOR.getAndIncrement();
     }
 
     public long getId() {
@@ -89,14 +81,6 @@ public class Post {
         this.threadId = threadId;
     }
 
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
     public long getUserId() {
         return userId;
     }
@@ -105,13 +89,6 @@ public class Post {
         this.userId = userId;
     }
 
-    public String getForum() {
-        return forum;
-    }
-
-    public void setForum(String forum) {
-        this.forum = forum;
-    }
 
     public long getForumId() {
         return forumId;

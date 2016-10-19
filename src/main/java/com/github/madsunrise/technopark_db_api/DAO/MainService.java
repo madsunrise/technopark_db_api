@@ -17,10 +17,10 @@ public class MainService {
     private final ForumDAO forumDAO;
     private final ThreadDAO threadDAO;
     private final PostDAO postDAO;
-    private static final Logger logger = LoggerFactory.getLogger(MainService.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(MainService.class.getName());
 
-    public MainService(JdbcTemplate template, UserDAODataBaseImpl userDAO, ForumDAODataBaseImpl forumDAO,
-                       ThreadDAODataBaseImpl threadDAO, PostDAODataBaseImpl postDAO) {
+    public MainService(JdbcTemplate template, UserDAO userDAO, ForumDAO forumDAO,
+                       ThreadDAO threadDAO, PostDAO postDAO) {
         this.template = template;
         this.userDAO = userDAO;
         this.forumDAO = forumDAO;
@@ -44,7 +44,7 @@ public class MainService {
     private void createAdditional() {
         createSubscription();
         createFollowing();
-        logger.info("Additional tables were created");
+        LOGGER.info("Additional tables were created");
     }
 
     private void createSubscription() {
@@ -72,7 +72,7 @@ public class MainService {
     private void dropAdditional() {
         dropSubscription();
         dropFollowing();
-        logger.info("Additional tables were dropped");
+        LOGGER.info("Additional tables were dropped");
     }
 
     private void dropSubscription() {

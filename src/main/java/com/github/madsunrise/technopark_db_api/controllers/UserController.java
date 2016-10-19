@@ -2,7 +2,7 @@ package com.github.madsunrise.technopark_db_api.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.madsunrise.technopark_db_api.DAO.UserDAO;
-import com.github.madsunrise.technopark_db_api.DAO.UserDAODataBaseImpl;
+import com.github.madsunrise.technopark_db_api.DAO.UserDAOImpl;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.Result;
 import com.github.madsunrise.technopark_db_api.response.UserDetails;
@@ -24,7 +24,7 @@ public class UserController {
 
     private final UserDAO userDAODataBase;
 
-    public UserController(UserDAODataBaseImpl userDAODataBase) {
+    public UserController(UserDAOImpl userDAODataBase) {
         this.userDAODataBase = userDAODataBase;
     }
 

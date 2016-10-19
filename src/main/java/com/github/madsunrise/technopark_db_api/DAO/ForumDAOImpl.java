@@ -31,20 +31,20 @@ import java.util.Map;
  */
 @Service
 @Transactional
-public class ForumDAODataBaseImpl implements ForumDAO {
+public class ForumDAOImpl implements ForumDAO {
 
     private final JdbcTemplate template;
-    private static final Logger LOGGER = LoggerFactory.getLogger(ForumDAODataBaseImpl.class.getName());
-    public ForumDAODataBaseImpl(JdbcTemplate template) {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ForumDAOImpl.class.getName());
+    public ForumDAOImpl(JdbcTemplate template) {
         this.template = template;
     }
 
     @Autowired
-    private UserDAODataBaseImpl userDAODataBase;
+    private UserDAOImpl userDAODataBase;
     @Autowired
-    private ThreadDAODataBaseImpl threadDAODataBase;
+    private ThreadDAOImpl threadDAODataBase;
     @Autowired
-    private PostDAODataBaseImpl postDAODataBase;
+    private PostDAOImpl postDAODataBase;
 
 
     @Override
@@ -138,6 +138,22 @@ public class ForumDAODataBaseImpl implements ForumDAO {
 
 
 
+
+    public ForumDetails getDetails(long forumId, List<String> related) {
+        final Forum forum = getById(forumId);
+        if (forum == null) {
+            LOGGER.info("Error getting forum details because forum with ID=\"{}\": does not exist!", forumId);
+            return null;
+        }
+
+        LOGGER.info("Getting forum details with ID=\"{}\" is success", forumId);
+        final User user = userDAODataBase.getById(forum.getUserId());
+        if (related != null && related.contains("user")) {
+            final UserDetailsExtended userDetails = new UserDetailsExtended(user);
+            return new ForumDetails<>(forum.getId(), forum.getName(), forum.getShortName(), userDetails);
+        }
+        return new ForumDetails<>(forum.getId(), forum.getName(), forum.getShortName(), user.getEmail());
+    }
 
 
     @Override

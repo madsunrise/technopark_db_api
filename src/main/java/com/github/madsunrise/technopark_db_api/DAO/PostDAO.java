@@ -5,6 +5,7 @@ import com.github.madsunrise.technopark_db_api.response.PostDetails;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -22,7 +23,14 @@ public interface PostDAO {
     long getAmount();
 
     List<PostDetailsExtended> getPostsByForum(String forumShortName,
-                                              LocalDateTime since, Integer limit, String order, List<String> related);
+                                              String order, Collection<String> related);
+    List<PostDetailsExtended> getPostsByForum(String forumShortName, LocalDateTime since,
+                                              String order, Collection<String> related);
+    List<PostDetailsExtended> getPostsByForum(String forumShortName, Integer limit,
+                                              String order, Collection<String> related);
+    List<PostDetailsExtended> getPostsByForum(String forumShortName, LocalDateTime since,
+                                              Integer limit, String order, Collection<String> related);
+
     List<PostDetailsExtended> getPostsByThread(long threadId,
                                                LocalDateTime since, Integer limit, String order);
 

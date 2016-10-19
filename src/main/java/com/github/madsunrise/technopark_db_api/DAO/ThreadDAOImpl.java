@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -27,21 +26,21 @@ import java.util.*;
  */
 @Service
 @Transactional
-public class ThreadDAODataBaseImpl implements ThreadDAO{
+public class ThreadDAOImpl implements ThreadDAO{
     private final JdbcTemplate template;
-    private static final Logger LOGGER = LoggerFactory.getLogger(ThreadDAODataBaseImpl.class.getName());
-    public ThreadDAODataBaseImpl(JdbcTemplate template) {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ThreadDAOImpl.class.getName());
+    public ThreadDAOImpl(JdbcTemplate template) {
         this.template = template;
     }
 
     @Autowired
-    private UserDAODataBaseImpl userDAODataBase;
+    private UserDAOImpl userDAODataBase;
 
     @Autowired
-    private ForumDAODataBaseImpl forumDAODataBase;
+    private ForumDAOImpl forumDAODataBase;
 
     @Autowired
-    private PostDAODataBaseImpl postDAODataBase;
+    private PostDAOImpl postDAODataBase;
 
 
     @Override
@@ -59,8 +58,6 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
                 "message TEXT NOT NULL," +
                 "slug VARCHAR(100) NOT NULL," +
                 "date DATETIME NOT NULL," +
-                "user VARCHAR(30) NOT NULL," +
-                "forum VARCHAR(30) NOT NULL," +
                 "closed TINYINT(1) NOT NULL DEFAULT 0," +
                 "deleted TINYINT(1) NOT NULL DEFAULT 0," +
                 "likes INT NOT NULL DEFAULT 0," +
@@ -92,9 +89,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
                         final Timestamp timestamp= rs.getTimestamp("date");
                         final LocalDateTime date = timestamp.toLocalDateTime();
                         final String slug = rs.getString("slug");
-                        final String user = rs.getString("user");
                         final long userId = rs.getLong("user_id");
-                        final String forum = rs.getString("forum");
                         final long forumId = rs.getLong("forum_id");
                         final boolean closed = rs.getBoolean("closed");
                         final boolean deleted = rs.getBoolean("deleted");
@@ -102,8 +97,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
                         final int likes = rs.getInt("likes");
                         final int dislikes = rs.getInt("dislikes");
                         final long id = rs.getLong("id");
-                        final Thread result = new Thread(title, message, date, slug, user, userId,
-                                forum, forumId, closed, deleted);
+                        final Thread result = new Thread(title, message, date, slug, userId, forumId, closed, deleted);
                         result.setPosts(posts);
                         result.setLikes(likes);
                         result.setDislikes(dislikes);
@@ -132,8 +126,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
             return null;
         }
 
-        final Thread thread = new Thread(title, message, date, slug,
-                userEmail, user.getId(), forumName, forum.getId(), closed, deleted);
+        final Thread thread = new Thread(title, message, date, slug, user.getId(), forum.getId(), closed, deleted);
         final KeyHolder keyHolder = new GeneratedKeyHolder();
         try {
             template.update(new ThreadPstCreator(thread), keyHolder);
@@ -147,8 +140,8 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         thread.setId((Long)keys.get("GENERATED_KEY"));
         LOGGER.info("Thread with title={} successful created", title);
         final ThreadDetails<String, String> threadDetails = new ThreadDetails<>(thread);
-        threadDetails.setForum(thread.getForum());
-        threadDetails.setUser(thread.getUser());
+        threadDetails.setForum(forumName);
+        threadDetails.setUser(userEmail);
         return threadDetails;
     }
 
@@ -159,21 +152,19 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         }
         @Override
         public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-            final String query = "INSERT INTO thread (title, message, date, slug, user, user_id," +
-                    "forum, forum_id, closed, deleted) VALUES (?,?,?,?,?,?,?,?,?,?);";
+            final String query = "INSERT INTO thread (title, message, date, slug, user_id, " +
+                    "forum_id, closed, deleted) VALUES (?,?,?,?,?,?,?,?);";
             PreparedStatement pst = con.prepareStatement(query,
                     Statement.RETURN_GENERATED_KEYS);
             pst.setString(1, thread.getTitle());
             pst.setString(2, thread.getMessage());
-            Timestamp date = Timestamp.valueOf(thread.getDate());
+            final Timestamp date = Timestamp.valueOf(thread.getDate());
             pst.setTimestamp(3, date);
             pst.setString(4, thread.getSlug());
-            pst.setString(5, thread.getUser());
-            pst.setLong(6, thread.getUserId());
-            pst.setString(7, thread.getForum());
-            pst.setLong(8, thread.getForumId());
-            pst.setBoolean(9, thread.isClosed());
-            pst.setBoolean(10, thread.isDeleted());
+            pst.setLong(5, thread.getUserId());
+            pst.setLong(6, thread.getForumId());
+            pst.setBoolean(7, thread.isClosed());
+            pst.setBoolean(8, thread.isDeleted());
             return pst;
         }
     }
@@ -227,36 +218,11 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
             LOGGER.info("Error getting thread details - thread with ID={}: does not exist!", threadId);
             return null;
         }
-        final ThreadDetailsExtended result = new ThreadDetailsExtended(thread);
-
-        final User user = userDAODataBase.getById(thread.getUserId());
-        if (related != null && related.contains("user")) {
-            final UserDetailsExtended userDetails = new UserDetailsExtended(user);
-            result.setUser(userDetails);
-        }
-        else {
-            result.setUser(user.getEmail());
-        }
-
-        final Forum forum = forumDAODataBase.getById(thread.getForumId());
-        if (related != null && related.contains("forum")) {
-            final ForumDetails<String> forumDetails = new ForumDetails<>(forum);
-            final User forumUser = userDAODataBase.getById(forum.getUserId());
-            forumDetails.setUser(forumUser.getEmail());
-            result.setForum(forumDetails);
-        }
-        else {
-            result.setForum(forum.getShortName());
-        }
 
         LOGGER.info("Getting thread (ID={}) details is success", threadId);
-        return result;
+        return threadToThreadDetails(thread, related);
     }
 
-    @Override
-    public long save(Thread thread) {
-        return 0;
-    }
 
     @Override
     public boolean remove(long threadId) {
@@ -284,6 +250,8 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         LOGGER.info("Restored thread with ID={}", threadId);
         return true;
     }
+
+
 
     @Override
     public Long subscribe(long threadId, String userEmail) {
@@ -351,13 +319,14 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
             return posts;
         }
 
-        // Add sort here
-            if (order.equals("asc")) {
-                Collections.sort(posts, new PathComparatorAsc());
-            }
-            else {
-                Collections.sort(posts, new PathComparatorDesc());
-            }
+
+        // tree и parent_tree сортировки
+        if (order.equals("asc")) {
+            Collections.sort(posts, new PathComparatorAsc());
+        }
+        else {
+            Collections.sort(posts, new PathComparatorDesc());
+        }
 
 
         if (limit != null && limit < posts.size()) {
@@ -378,18 +347,18 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
             }
             return posts.subList(0, limit); // для tree
         }
-
         return posts;
     }
+
 
     @Override
     public ThreadDetailsExtended vote(long threadId, int vote) {
         final String query;
         if (vote == 1) {
-            query = "UPDATE thread SET likes = likes + 1 WHERE id=?;";
+            query = "UPDATE thread SET likes = likes + 1 WHERE id = ?;";
         }
         else {
-            query = "UPDATE thread SET dislikes = dislikes + 1 WHERE id=?;";
+            query = "UPDATE thread SET dislikes = dislikes + 1 WHERE id = ?;";
         }
         final int affectedRows = template.update(query, threadId);
         if (affectedRows == 0) {
@@ -397,7 +366,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
             return null;
         }
         final Thread thread = getById(threadId);
-        return new ThreadDetailsExtended(thread);
+        return threadToThreadDetails(thread, null);
     }
 
     @Override
@@ -409,90 +378,147 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
             return null;
         }
         final Thread thread = getById(threadId);
-        return new ThreadDetailsExtended(thread);
+        return threadToThreadDetails(thread, null);
 
     }
 
 
     @Override
     public List<ThreadDetailsExtended> getThreadsByForum(String forumShortName, String order, List<String> related) {
-        final String query = "SELECT * FROM thread WHERE forum=? ORDER BY date " + order + ';';
-        final List<Thread> threads = template.query(query, threadMapper, forumShortName);
-        return makeDetailsWithRelations(threads, related);
+        final Forum forum = forumDAODataBase.getByShortName(forumShortName);
+        if (forum == null) {
+            LOGGER.info("Error getting threads by forum because forum {} does not exist", forumShortName);
+            return null;
+        }
+        final String query = "SELECT * FROM thread WHERE forum_id = ? ORDER BY date " + order + ';';
+        final List<Thread> threads = template.query(query, threadMapper, forum.getId());
+
+        final List<ThreadDetailsExtended> threadsDetails = new ArrayList<>();
+        for (Thread thread: threads) {
+            threadsDetails.add(threadToThreadDetails(thread, related));
+        }
+        return threadsDetails;
     }
 
     @Override
     public List<ThreadDetailsExtended> getThreadsByForum(String forumShortName,
                                                          LocalDateTime since, String order, List<String> related) {
-        final String query = "SELECT * FROM thread WHERE forum=? AND date >= ? ORDER BY date " + order + ';';
-        final List<Thread> threads = template.query(query, threadMapper, forumShortName, since);
-        return makeDetailsWithRelations(threads, related);
+        final Forum forum = forumDAODataBase.getByShortName(forumShortName);
+        if (forum == null) {
+            LOGGER.info("Error getting threads by forum because forum {} does not exist", forumShortName);
+            return null;
+        }
+        final String query = "SELECT * FROM thread WHERE forum_id = ? AND date >= ? ORDER BY date " + order + ';';
+        final List<Thread> threads = template.query(query, threadMapper, forum.getId(), since);
+        final List<ThreadDetailsExtended> threadsDetails = new ArrayList<>();
+        for (Thread thread: threads) {
+            threadsDetails.add(threadToThreadDetails(thread, related));
+        }
+        return threadsDetails;
     }
 
     @Override
     public List<ThreadDetailsExtended> getThreadsByForum(String forumShortName,
                                                          Integer limit, String order, List<String> related) {
-        final String query = "SELECT * FROM thread WHERE forum=? ORDER BY date " + order + " LIMIT ?;";
-        final List<Thread> threads = template.query(query, threadMapper, forumShortName, limit);
-        return makeDetailsWithRelations(threads, related);
+        final Forum forum = forumDAODataBase.getByShortName(forumShortName);
+        if (forum == null) {
+            LOGGER.info("Error getting threads by forum because forum {} does not exist", forumShortName);
+            return null;
+        }
+        final String query = "SELECT * FROM thread WHERE forum_id = ? ORDER BY date " + order + " LIMIT ?;";
+        final List<Thread> threads = template.query(query, threadMapper, forum.getId(), limit);
+        final List<ThreadDetailsExtended> threadsDetails = new ArrayList<>();
+        for (Thread thread: threads) {
+            threadsDetails.add(threadToThreadDetails(thread, related));
+        }
+        return threadsDetails;
     }
 
     @Override
     public List<ThreadDetailsExtended> getThreadsByForum(String forumShortName, LocalDateTime since,
                                                          Integer limit, String order, List<String> related) {
-        final String query = "SELECT * FROM thread WHERE forum=? AND date >= ? ORDER BY date " + order + " LIMIT ?;";
-        final List<Thread> threads = template.query(query, threadMapper, forumShortName, since, limit);
-        return makeDetailsWithRelations(threads, related);
-    }
-
-    private List<ThreadDetailsExtended> makeDetailsWithRelations (Iterable<Thread> threads, Collection<String> related) {
-        final List<ThreadDetailsExtended> result = new ArrayList<>();
-        for (Thread thread: threads) {
-            final ThreadDetailsExtended details = new ThreadDetailsExtended(thread);
-            if (related != null && related.contains("forum")) {
-                final ForumDetails forumDetails = forumDAODataBase.getDetails(thread.getForum(), null);
-                details.setForum(forumDetails);
-            } else {
-                details.setForum(thread.getForum());
-            }
-
-            if (related != null && related.contains("user")) {
-                final UserDetailsExtended userDetails = userDAODataBase.getDetails(thread.getUser());
-                details.setUser(userDetails);
-            } else {
-                details.setUser(thread.getUser());
-            }
-            result.add(details);
+        final Forum forum = forumDAODataBase.getByShortName(forumShortName);
+        if (forum == null) {
+            LOGGER.info("Error getting threads by forum because forum {} does not exist", forumShortName);
+            return null;
         }
-        return result;
+        final String query = "SELECT * FROM thread WHERE forum_id = ? AND date >= ?" +
+                " ORDER BY date " + order + " LIMIT ?;";
+
+        final List<Thread> threads = template.query(query, threadMapper, forum.getId(), since, limit);
+        final List<ThreadDetailsExtended> threadsDetails = new ArrayList<>();
+        for (Thread thread: threads) {
+            threadsDetails.add(threadToThreadDetails(thread, related));
+        }
+        return threadsDetails;
     }
+
+
+
 
     @Override
     public List<ThreadDetailsExtended> getThreadsByUser(String userEmail, String order) {
-        final String query = "SELECT * FROM thread WHERE user=? ORDER BY date " + order + ';';
-        final List<Thread> threads = template.query(query, threadMapper, userEmail);
-        return makeDetailsWithRelations(threads, null);
+        final User user = userDAODataBase.getByEmail(userEmail);
+        if (user == null) {
+            LOGGER.info("Error getting threads by user because user {} does not exist", userEmail);
+            return null;
+        }
+        final String query = "SELECT * FROM thread WHERE user_id = ? ORDER BY date " + order + ';';
+        final List<Thread> threads = template.query(query, threadMapper, user.getId());
+        final List<ThreadDetailsExtended> threadsDetails = new ArrayList<>();
+        for (Thread thread: threads) {
+            threadsDetails.add(threadToThreadDetails(thread, null));
+        }
+        return threadsDetails;
     }
 
     @Override
     public List<ThreadDetailsExtended> getThreadsByUser(String userEmail, LocalDateTime since, String order) {
-        final String query = "SELECT * FROM thread WHERE user=? AND date >= ? ORDER BY date " + order + ';';
-        final List<Thread> threads = template.query(query, threadMapper, userEmail, since);
-        return makeDetailsWithRelations(threads, null);
+        final User user = userDAODataBase.getByEmail(userEmail);
+        if (user == null) {
+            LOGGER.info("Error getting threads by user because user {} does not exist", userEmail);
+            return null;
+        }
+        final String query = "SELECT * FROM thread WHERE user_id = ? AND date >= ? ORDER BY date " + order + ';';
+        final List<Thread> threads = template.query(query, threadMapper, user.getId(), since);
+        final List<ThreadDetailsExtended> threadsDetails = new ArrayList<>();
+        for (Thread thread: threads) {
+            threadsDetails.add(threadToThreadDetails(thread, null));
+        }
+        return threadsDetails;
     }
 
     @Override
     public List<ThreadDetailsExtended> getThreadsByUser(String userEmail, Integer limit, String order) {
-        final String query = "SELECT * FROM thread WHERE user=? ORDER BY date " + order + " LIMIT ?;";
-        final List<Thread> threads = template.query(query, threadMapper, userEmail, limit);
-        return makeDetailsWithRelations(threads, null);
+        final User user = userDAODataBase.getByEmail(userEmail);
+        if (user == null) {
+            LOGGER.info("Error getting threads by user because user {} does not exist", userEmail);
+            return null;
+        }
+        final String query = "SELECT * FROM thread WHERE user_id = ? ORDER BY date " + order + " LIMIT ?;";
+        final List<Thread> threads = template.query(query, threadMapper, user.getId(), limit);
+        final List<ThreadDetailsExtended> threadsDetails = new ArrayList<>();
+        for (Thread thread: threads) {
+            threadsDetails.add(threadToThreadDetails(thread, null));
+        }
+        return threadsDetails;
     }
 
     @Override
-    public List<ThreadDetailsExtended> getThreadsByUser(String userEmail, LocalDateTime since, Integer limit, String order) {
-        final String query = "SELECT * FROM thread WHERE user=? AND date >= ? ORDER BY date " + order + " LIMIT ?;";
-        final List<Thread> threads = template.query(query, threadMapper, userEmail, since, limit);
-        return makeDetailsWithRelations(threads, null);
+    public List<ThreadDetailsExtended> getThreadsByUser(String userEmail,
+                                                        LocalDateTime since, Integer limit, String order) {
+        final User user = userDAODataBase.getByEmail(userEmail);
+        if (user == null) {
+            LOGGER.info("Error getting threads by user because user {} does not exist", userEmail);
+            return null;
+        }
+        final String query = "SELECT * FROM thread WHERE user_id = ? AND date >= ? ORDER BY date " + order + " LIMIT ?;";
+        final List<Thread> threads = template.query(query, threadMapper, user.getId(), since, limit);
+        final List<ThreadDetailsExtended> threadsDetails = new ArrayList<>();
+        for (Thread thread: threads) {
+            threadsDetails.add(threadToThreadDetails(thread, null));
+        }
+        return threadsDetails;
     }
 
 
@@ -519,21 +545,36 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
                     return path2.compareTo(path1);
                 }
             }
-
             return path2.compareTo(path1);
         }
     }
 
 
 
-    static class DatePostsComparator implements Comparator<PostDetailsExtended> {
-        @Override
-        public int compare(PostDetailsExtended p1, PostDetailsExtended p2) {
-            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            final LocalDateTime d1 = LocalDateTime.parse(p1.getDate(), formatter);
-            final LocalDateTime d2 = LocalDateTime.parse(p2.getDate(), formatter);
-            return d1.compareTo(d2);
+
+    private ThreadDetailsExtended threadToThreadDetails (Thread thread, Collection<String> related) {
+        final ThreadDetailsExtended result = new ThreadDetailsExtended(thread);
+        final Forum forum = forumDAODataBase.getById(thread.getForumId());
+        final User user = userDAODataBase.getById(thread.getUserId());
+
+        if (related != null && related.contains("forum")) {
+            final ForumDetails<String> forumDetails = new ForumDetails<>(forum);
+            final User forumUser = userDAODataBase.getById(forum.getUserId());
+            forumDetails.setUser(forumUser.getEmail());
+            result.setForum(forumDetails);
         }
+        else {
+            result.setForum(forum.getShortName());
+        }
+
+        if (related != null && related.contains("user")) {
+            final UserDetailsExtended userDetails = new UserDetailsExtended(user);
+            result.setUser(userDetails);
+        }
+        else {
+            result.setUser(user.getEmail());
+        }
+        return result;
     }
 
 
@@ -543,9 +584,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         final Timestamp timestamp = rs.getTimestamp("date");
         final LocalDateTime date = timestamp.toLocalDateTime();
         final String slug = rs.getString("slug");
-        final String user = rs.getString("user");
         final long userId = rs.getLong("user_id");
-        final String forum = rs.getString("forum");
         final long forumId = rs.getLong("forum_id");
         final boolean closed = rs.getBoolean("closed");
         final boolean deleted = rs.getBoolean("deleted");
@@ -553,8 +592,7 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         final int likes = rs.getInt("likes");
         final int dislikes = rs.getInt("dislikes");
         final long id = rs.getLong("id");
-        final Thread result = new Thread(title, message, date, slug, user, userId,
-                forum, forumId, closed, deleted);
+        final Thread result = new Thread(title, message, date, slug, userId, forumId, closed, deleted);
         result.setPosts(posts);
         result.setLikes(likes);
         result.setDislikes(dislikes);

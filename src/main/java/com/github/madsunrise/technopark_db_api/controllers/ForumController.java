@@ -1,7 +1,7 @@
 package com.github.madsunrise.technopark_db_api.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.madsunrise.technopark_db_api.DAO.ForumDAODataBaseImpl;
+import com.github.madsunrise.technopark_db_api.DAO.ForumDAOImpl;
 import com.github.madsunrise.technopark_db_api.response.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
@@ -16,9 +16,9 @@ import java.util.List;
  */
 @RestController
 public class ForumController {
-    private final ForumDAODataBaseImpl forumDAODataBase;
+    private final ForumDAOImpl forumDAODataBase;
 
-    public ForumController(ForumDAODataBaseImpl forumDAODataBase) {
+    public ForumController(ForumDAOImpl forumDAODataBase) {
         this.forumDAODataBase = forumDAODataBase;
     }
 
