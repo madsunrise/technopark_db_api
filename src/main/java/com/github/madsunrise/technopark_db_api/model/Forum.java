@@ -9,17 +9,12 @@ public class Forum {
     private long id;
     private String name;
     private String shortName;
-    private String user;
     private long userId;
 
-    private static final AtomicLong ID_GENETATOR = new AtomicLong(0);
-
-    public Forum(String name, String shortName, String user, long userId) {
+    public Forum(String name, String shortName, long userId) {
         this.name = name;
         this.shortName = shortName;
-        this.user = user;
         this.userId = userId;
-        this.id = ID_GENETATOR.getAndIncrement();
     }
 
     public long getId() {
@@ -44,14 +39,6 @@ public class Forum {
 
     public void setShortName(String shortName) {
         this.shortName = shortName;
-    }
-
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
     }
 
     public long getUserId() {

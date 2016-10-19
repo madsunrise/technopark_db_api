@@ -229,23 +229,24 @@ public class ThreadDAODataBaseImpl implements ThreadDAO{
         }
         final ThreadDetailsExtended result = new ThreadDetailsExtended(thread);
 
+        final User user = userDAODataBase.getById(thread.getUserId());
         if (related != null && related.contains("user")) {
-            final User user = userDAODataBase.getByEmail(thread.getUser());
             final UserDetailsExtended userDetails = new UserDetailsExtended(user);
             result.setUser(userDetails);
         }
         else {
-            result.setUser(thread.getUser());
+            result.setUser(user.getEmail());
         }
 
+        final Forum forum = forumDAODataBase.getById(thread.getForumId());
         if (related != null && related.contains("forum")) {
-            final Forum forum = forumDAODataBase.getByShortName(thread.getForum());
             final ForumDetails<String> forumDetails = new ForumDetails<>(forum);
-            forumDetails.setUser(forum.getUser());
+            final User forumUser = userDAODataBase.getById(forum.getUserId());
+            forumDetails.setUser(forumUser.getEmail());
             result.setForum(forumDetails);
         }
         else {
-            result.setForum(thread.getForum());
+            result.setForum(forum.getShortName());
         }
 
         LOGGER.info("Getting thread (ID={}) details is success", threadId);

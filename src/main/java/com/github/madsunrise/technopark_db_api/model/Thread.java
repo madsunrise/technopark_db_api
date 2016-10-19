@@ -13,9 +13,7 @@ public class Thread {
     private String message;
     private LocalDateTime date;
     private String slug;
-    private String user;
     private long userId;
-    private String forum;
     private long forumId;
     private boolean closed;
     private boolean deleted;
@@ -26,14 +24,12 @@ public class Thread {
     private static final AtomicLong ID_GENETATOR = new AtomicLong(0);
 
     public Thread(String title, String message, LocalDateTime date, String slug,
-                  String user, long userId, String forum, long forumId, boolean closed, boolean deleted) {
+                  long userId, long forumId, boolean closed, boolean deleted) {
         this.title = title;
         this.message = message;
         this.date = date;
         this.slug = slug;
-        this.user = user;
         this.userId = userId;
-        this.forum = forum;
         this.forumId = forumId;
         this.closed = closed;
         this.deleted = deleted;
@@ -79,28 +75,12 @@ public class Thread {
         this.slug = slug;
     }
 
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
     public long getUserId() {
         return userId;
     }
 
     public void setUserId(long userId) {
         this.userId = userId;
-    }
-
-    public String getForum() {
-        return forum;
-    }
-
-    public void setForum(String forum) {
-        this.forum = forum;
     }
 
     public long getForumId() {

@@ -65,6 +65,22 @@ public class UserDAODataBaseImpl implements UserDAO {
 
 
     @Override
+    public User getById (long userId) {
+        try {
+            final User user = template.queryForObject(
+                    "SELECT * FROM user WHERE id = ?", userMapper, userId);
+
+            user.setFollowers(loadFollowers(user.getId()));
+            user.setFollowees(loadFollowees(user.getId()));
+            user.setSubscriptions(loadSubscriptions(user.getId()));
+            return user;
+        }
+        catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
+
+    @Override
     public User getByEmail(String email) {
         try {
             final User user = template.queryForObject(

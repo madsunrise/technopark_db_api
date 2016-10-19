@@ -13,6 +13,7 @@ import java.util.List;
  * Created by ivan on 09.10.16.
  */
 public interface ForumDAO {
+    Forum getById (long forumId);
     Forum getByShortName (String shortName);
     ForumDetails create(String name, String shortName, String user);
     ForumDetails getDetails(String shortName);

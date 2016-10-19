@@ -59,7 +59,6 @@ public class ForumDAODataBaseImpl implements ForumDAO {
                 "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY," +
                 "name VARCHAR(100) UNIQUE NOT NULL," +
                 "short_name VARCHAR(30) UNIQUE NOT NULL," +
-                "user VARCHAR(30) NOT NULL," +
                 "user_id BIGINT NOT NULL," +
                 "FOREIGN KEY (user_id) REFERENCES user(id)) CHARACTER SET utf8" +
                 " DEFAULT COLLATE utf8_general_ci;";
@@ -75,20 +74,39 @@ public class ForumDAODataBaseImpl implements ForumDAO {
 
 
     @Override
+    public Forum getById (long forumId) {
+        try {
+            return template.queryForObject(
+                    "SELECT * FROM forum WHERE id = ?",
+                    (rs, rowNum) -> {
+                        final String name = rs.getString("name");
+                        final String shortName = rs.getString("short_name");
+                        final Long userId = rs.getLong("user_id");
+                        final Forum result = new Forum(name, shortName, userId);
+                        result.setId(forumId);
+                        return result;
+                    }, forumId);
+        }
+        catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
+
+
+
+    @Override
     public Forum getByShortName(String shortName) {
         try {
-            final Forum forum = template.queryForObject(
+            return template.queryForObject(
                     "SELECT * FROM forum WHERE short_name = ?",
                     (rs, rowNum) -> {
                         final String name = rs.getString("name");
-                        final String user = rs.getString("user");
                         final Long userId = rs.getLong("user_id");
                         final long id = rs.getLong("id");
-                        final Forum result = new Forum(name, shortName, user, userId);
+                        final Forum result = new Forum(name, shortName, userId);
                         result.setId(id);
                         return result;
                     }, shortName);
-            return forum;
         }
         catch (EmptyResultDataAccessException e) {
             return null;
@@ -103,7 +121,7 @@ public class ForumDAODataBaseImpl implements ForumDAO {
             return null;
         }
 
-        final Forum forum = new Forum(name, shortName, userEmail, user.getId());
+        final Forum forum = new Forum(name, shortName, user.getId());
         final KeyHolder keyHolder = new GeneratedKeyHolder();
         try {
             template.update(new ForumPstCreator(forum), keyHolder);
@@ -118,23 +136,7 @@ public class ForumDAODataBaseImpl implements ForumDAO {
         return new ForumDetails(forum);
     }
 
-    private static class ForumPstCreator implements PreparedStatementCreator {
-        private final Forum forum;
-        ForumPstCreator(Forum forum) {
-            this.forum = forum;
-        }
-        @Override
-        public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-            final String query = "INSERT INTO forum (name, short_name, user, user_id) VALUES (?,?,?,?);";
-            PreparedStatement pst = con.prepareStatement(query,
-                    Statement.RETURN_GENERATED_KEYS);
-            pst.setString(1, forum.getName());
-            pst.setString(2, forum.getShortName());
-            pst.setString(3, forum.getUser());
-            pst.setLong(4, forum.getUserId());
-            return pst;
-        }
-    }
+
 
 
 
@@ -152,12 +154,12 @@ public class ForumDAODataBaseImpl implements ForumDAO {
         }
 
         LOGGER.info("Getting forum details \"{}\" is success", shortName);
+        final User user = userDAODataBase.getById(forum.getUserId());
         if (related != null && related.contains("user")) {
-            final User user = userDAODataBase.getByEmail(forum.getUser());
             final UserDetailsExtended userDetails = new UserDetailsExtended(user);
             return new ForumDetails<>(forum.getId(), forum.getName(), forum.getShortName(), userDetails);
         }
-        return new ForumDetails<>(forum.getId(), forum.getName(), forum.getShortName(), forum.getUser());
+        return new ForumDetails<>(forum.getId(), forum.getName(), forum.getShortName(), user.getEmail());
     }
 
 
@@ -221,6 +223,23 @@ public class ForumDAODataBaseImpl implements ForumDAO {
             else {
                 return userDAODataBase.getUsersByForum(shortName, sinceId, limit, order);
             }
+        }
+    }
+
+    private static class ForumPstCreator implements PreparedStatementCreator {
+        private final Forum forum;
+        ForumPstCreator(Forum forum) {
+            this.forum = forum;
+        }
+        @Override
+        public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+            final String query = "INSERT INTO forum (name, short_name, user_id) VALUES (?,?,?);";
+            final PreparedStatement pst = con.prepareStatement(query,
+                    Statement.RETURN_GENERATED_KEYS);
+            pst.setString(1, forum.getName());
+            pst.setString(2, forum.getShortName());
+            pst.setLong(3, forum.getUserId());
+            return pst;
         }
     }
 }
