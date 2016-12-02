@@ -121,7 +121,7 @@ public class ForumController {
         return Result.ok(result);
     }
 
-    
+
 
 
     private static class CreateRequest {
