@@ -115,6 +115,7 @@ public class ThreadDAOImpl implements ThreadDAO{
     @Override
     public ThreadDetails create(String forumName, String title, boolean closed,
                                 String userEmail, LocalDateTime date, String message, String slug, boolean deleted) {
+        final long start = System.currentTimeMillis();
         final Forum forum = forumDAODataBase.getByShortName(forumName);
         if (forum == null) {
             LOGGER.info("Error creating thread because forum \"{}\" does not exist!", forumName);
@@ -138,10 +139,13 @@ public class ThreadDAOImpl implements ThreadDAO{
 
         final Map<String, Object> keys = keyHolder.getKeys();
         thread.setId((Long)keys.get("GENERATED_KEY"));
-        LOGGER.info("Thread with title={} successful created", title);
+
         final ThreadDetails<String, String> threadDetails = new ThreadDetails<>(thread);
         threadDetails.setForum(forumName);
         threadDetails.setUser(userEmail);
+
+        final long end = System.currentTimeMillis();
+        LOGGER.info("Thread with title={} successful created, time: {}", title, end-start);
         return threadDetails;
     }
 

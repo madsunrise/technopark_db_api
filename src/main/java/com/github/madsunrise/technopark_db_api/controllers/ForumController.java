@@ -123,6 +123,14 @@ public class ForumController {
 
 
 
+    @RequestMapping(path = "/db/api/forum/forumuser", method = RequestMethod.GET)
+    public void script(){
+
+//        forumDAODataBase.createUserForumTable();
+//        forumDAODataBase.fillUserForumTable();
+    }
+
+
 
 
 

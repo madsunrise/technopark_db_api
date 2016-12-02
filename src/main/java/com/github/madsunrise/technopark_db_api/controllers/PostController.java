@@ -7,6 +7,8 @@ import com.github.madsunrise.technopark_db_api.DAO.ThreadDAOImpl;
 import com.github.madsunrise.technopark_db_api.response.PostDetails;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.Result;
+import com.mysql.jdbc.exceptions.MySQLTransactionRollbackException;
+import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -42,9 +44,26 @@ public class PostController {
         }
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         final LocalDateTime date = LocalDateTime.parse(request.date, formatter);
-        final PostDetails<String, String, String> result = postDAODataBase.create(date, request.thread, request.message,
-                request.user, request.forum, request.parent, request.approved, request.highlighted, request.edited,
-                request.spam, request.deleted);
+
+        PostDetails<String, String, String> result = null;
+
+        int count = 0;
+        while (true) {
+            try {
+                if (count > 10) {
+                    break;
+                }
+
+                result = postDAODataBase.create(date, request.thread, request.message,
+                        request.user, request.forum, request.parent, request.approved, request.highlighted, request.edited,
+                        request.spam, request.deleted);
+
+                break;
+            } catch (DeadlockLoserDataAccessException e) {
+                e.printStackTrace();
+                count++;
+            }
+        }
 
         if (result == null) {
             return Result.badRequest();

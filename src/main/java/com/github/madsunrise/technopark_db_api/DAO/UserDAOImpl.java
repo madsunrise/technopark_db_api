@@ -35,7 +35,10 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Autowired
-    private PostDAOImpl postDAODataBase;
+    private PostDAOImpl postDAO;
+
+    @Autowired
+    private ForumDAOImpl forumDAO;
 
     @Override
     public void clear() {
@@ -50,9 +53,10 @@ public class UserDAOImpl implements UserDAO {
                 "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY," +
                 "name VARCHAR(100)," +
                 "username VARCHAR(30)," +
-                "email VARCHAR(30) UNIQUE NOT NULL," +
+                "email VARCHAR(30) NOT NULL," +
                 "about TEXT," +
-                "anonymous TINYINT(1) NOT NULL DEFAULT 0) CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;";
+                "anonymous TINYINT(1) NOT NULL DEFAULT 0," +
+                "UNIQUE KEY (email)) CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci";
         template.execute(createTable);
         LOGGER.info("Table user was created");
     }
@@ -98,6 +102,7 @@ public class UserDAOImpl implements UserDAO {
 
     @Override
     public UserDetails create(String username, String name, String email, String about, boolean anonymous) {
+        final long start = System.currentTimeMillis();
         final User user = new User(username, name, email, about, anonymous);
         final KeyHolder keyHolder = new GeneratedKeyHolder();
         try {
@@ -109,7 +114,8 @@ public class UserDAOImpl implements UserDAO {
         }
         final Map<String, Object> keys = keyHolder.getKeys();
         user.setId((Long)keys.get("GENERATED_KEY"));
-        LOGGER.info("User with email \"{}\" successful created", email);
+        final long end = System.currentTimeMillis();
+        LOGGER.info("User with email \"{}\" successful created, time: {}", email, end-start);
         return new UserDetails(user);
     }
 
@@ -366,18 +372,18 @@ public class UserDAOImpl implements UserDAO {
     public List<PostDetailsExtended> getPosts(String email, LocalDateTime since, Integer limit, String order) {
         if (since == null) {
             if (limit == null) {
-                return postDAODataBase.getPostsByUser(email, order);
+                return postDAO.getPostsByUser(email, order);
             }
             else {
-                return postDAODataBase.getPostsByUser(email, limit, order);
+                return postDAO.getPostsByUser(email, limit, order);
             }
         }
         else {
             if (limit == null) {
-                return postDAODataBase.getPostsByUser(email, since, order);
+                return postDAO.getPostsByUser(email, since, order);
             }
             else {
-                return postDAODataBase.getPostsByUser(email, since, limit, order);
+                return postDAO.getPostsByUser(email, since, limit, order);
             }
         }
     }
@@ -385,20 +391,23 @@ public class UserDAOImpl implements UserDAO {
 
 
     public List<UserDetailsExtended> getUsersByForum(String forumShortName, String order) {
-        final String query = "SELECT DISTINCT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
-                " FROM user u JOIN post p ON u.id = p.user_id JOIN forum f ON p.forum_id = f.id " +
-                " WHERE f.short_name = ? ORDER BY name " + order + ';';
-        final List<User> users = template.query(query, userMapper, forumShortName);
+        final long forumId = forumDAO.getByShortName(forumShortName).getId();
+        final String query = "SELECT u.*" +
+                " FROM user u JOIN user_forum uf ON u.id = uf.user_id " +
+                "WHERE uf.forum_id = ? ORDER BY u.name " + order + ';';
+        final List<User> users = template.query(query, userMapper, forumId);
         LOGGER.info("Getting users of forum {} is successful", forumShortName);
         return usersToUsersDetails(users);
     }
 
 
     public List<UserDetailsExtended> getUsersByForum(String forumShortName, Long sinceId, String order) {
-        final String query = "SELECT DISTINCT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
-                " FROM user u JOIN post p ON u.id = p.user_id JOIN forum f ON p.forum_id = f.id " +
-                " WHERE f.short_name = ? AND u.id >= ?  ORDER BY name " + order + ';';
-        final List<User> users = template.query(query, userMapper, forumShortName, sinceId);
+        final long forumId = forumDAO.getByShortName(forumShortName).getId();
+        final String query = "SELECT u.*" +
+                " FROM user u JOIN user_forum uf ON u.id = uf.user_id " +
+                "WHERE uf.forum_id = ?" +
+                " AND u.id >= ?  ORDER BY u.name " + order + ';';
+        final List<User> users = template.query(query, userMapper, forumId, sinceId);
         LOGGER.info("Getting users of forum {} is successful", forumShortName);
         return usersToUsersDetails(users);
     }
@@ -406,20 +415,24 @@ public class UserDAOImpl implements UserDAO {
 
 
     public List<UserDetailsExtended> getUsersByForum(String forumShortName, Integer limit, String order) {
-        final String query = "SELECT DISTINCT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
-                " FROM user u JOIN post p ON u.id = p.user_id JOIN forum f ON p.forum_id = f.id " +
-                " WHERE f.short_name = ? ORDER BY name " + order + " LIMIT ?";
-        final List<User> users = template.query(query, userMapper, forumShortName, limit);
+        final long forumId = forumDAO.getByShortName(forumShortName).getId();
+        final String query = "SELECT u.*" +
+                " FROM user u JOIN user_forum uf ON u.id = uf.user_id " +
+                "WHERE uf.forum_id = ?" +
+                " ORDER BY u.name " + order + " LIMIT ?";
+        final List<User> users = template.query(query, userMapper, forumId, limit);
         LOGGER.info("Getting users of forum {} is successful", forumShortName);
         return usersToUsersDetails(users);
     }
 
     @Override
     public List<UserDetailsExtended> getUsersByForum(String forumShortName, Long sinceId, Integer limit, String order) {
-        final String query = "SELECT DISTINCT u.id, u.username, u.name, u.email, u.about, u.anonymous" +
-                " FROM user u JOIN post p ON u.id = p.user_id JOIN forum f ON p.forum_id = f.id" +
-                " WHERE f.short_name = ? AND u.id >= ?  ORDER BY name " + order + " LIMIT ?";
-        final List<User> users = template.query(query, userMapper, forumShortName, sinceId, limit);
+        final long forumId = forumDAO.getByShortName(forumShortName).getId();
+        final String query = "SELECT u.*" +
+                " FROM user u JOIN user_forum uf ON u.id = uf.user_id " +
+                "WHERE uf.forum_id = ?" +
+                " AND u.id >= ?  ORDER BY name " + order + " LIMIT ?";
+        final List<User> users = template.query(query, userMapper, forumId, sinceId, limit);
         LOGGER.info("Getting users of forum {} is successful", forumShortName);
         return usersToUsersDetails(users);
     }

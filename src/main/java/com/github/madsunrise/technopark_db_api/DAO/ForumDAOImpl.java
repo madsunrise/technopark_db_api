@@ -6,9 +6,11 @@ import com.github.madsunrise.technopark_db_api.response.ForumDetails;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.ThreadDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.UserDetailsExtended;
+import com.mysql.jdbc.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.SystemEnvironmentPropertySource;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -23,6 +25,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -65,6 +68,40 @@ public class ForumDAOImpl implements ForumDAO {
         template.execute(createTable);
         LOGGER.info("Table forum was created");
     }
+
+
+    public void createUserForumTable() {
+        final String createTable = "CREATE TABLE IF NOT EXISTS user_forum (" +
+                "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY," +
+                "user_id BIGINT NOT NULL," +
+                "forum_id BIGINT NOT NULL," +
+                "UNIQUE KEY (user_id, forum_id));";
+        template.execute(createTable);
+    }
+
+    public void fillUserForumTable() {
+        final String getAllForums = "SELECT * FROM forum";
+        final List<Forum> forums = template.query(getAllForums, (rs, rowNum) -> {
+            final String name = rs.getString("name");
+            final String shortName = rs.getString("short_name");
+            final Long userId = rs.getLong("user_id");
+            final long id = rs.getLong("id");
+            final Forum result = new Forum(name, shortName, userId);
+            result.setId(id);
+            return result;
+        });
+
+        final String query = "INSERT INTO user_forum(forum_id, user_id) VALUES (?,?);";
+        for (Forum forum: forums) {
+            final List<UserDetailsExtended> users = getUsers(forum.getShortName(), null, null, "asc");
+            for (UserDetailsExtended user: users) {
+                template.update(query, forum.getId(), user.getId());
+                LOGGER.info("Inserted user id={} to forum id={}", user.getId(), forum.getId());
+            }
+        }
+        LOGGER.info("FINISHED!");
+    }
+
 
     @Override
     public long getAmount() {
@@ -115,6 +152,7 @@ public class ForumDAOImpl implements ForumDAO {
 
     @Override
     public ForumDetails create(String name, String shortName, String userEmail) {
+        final long start = System.currentTimeMillis();
         final User user = userDAODataBase.getByEmail(userEmail);
         if (user == null) {
             LOGGER.info("Error creating forum because user \"{}\" does not exist!", userEmail);
@@ -132,14 +170,15 @@ public class ForumDAOImpl implements ForumDAO {
         }
         final Map<String, Object> keys = keyHolder.getKeys();
         forum.setId((Long)keys.get("GENERATED_KEY"));
-        LOGGER.info("Forum \"{}\" successful created", shortName);
+        final long end = System.currentTimeMillis();
+        LOGGER.info("Forum \"{}\" successful created, time: {}", shortName, end-start);
         return new ForumDetails(forum);
     }
 
 
 
 
-    public ForumDetails getDetails(long forumId, List<String> related) {
+    public ForumDetails getDetails(long forumId, Collection<String> related) {
         final Forum forum = getById(forumId);
         if (forum == null) {
             LOGGER.info("Error getting forum details because forum with ID=\"{}\": does not exist!", forumId);
@@ -241,6 +280,11 @@ public class ForumDAOImpl implements ForumDAO {
             }
         }
     }
+
+
+
+
+
 
     private static class ForumPstCreator implements PreparedStatementCreator {
         private final Forum forum;

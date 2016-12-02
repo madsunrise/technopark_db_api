@@ -4,6 +4,7 @@ import com.github.madsunrise.technopark_db_api.model.Forum;
 import com.github.madsunrise.technopark_db_api.model.Post;
 import com.github.madsunrise.technopark_db_api.model.User;
 import com.github.madsunrise.technopark_db_api.response.*;
+import com.mysql.jdbc.exceptions.MySQLTransactionRollbackException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,7 +101,7 @@ public class PostDAOImpl implements PostDAO {
     public PostDetails create(LocalDateTime date, long threadId, String message, String userEmail,
                               String forumShortName, Long parent, boolean approved,
                               boolean highlighted, boolean edited, boolean spam, boolean deleted) {
-
+        final long start = System.currentTimeMillis();
         final Forum forum = forumDAODataBase.getByShortName(forumShortName);
         if (forum == null) {
             LOGGER.info("Error creating post because forum \"{}\" does not exist!", forumShortName);
@@ -128,13 +129,18 @@ public class PostDAOImpl implements PostDAO {
         final Map<String, Object> keys = keyHolder.getKeys();
         post.setId((Long)keys.get("GENERATED_KEY"));
 
-        LOGGER.info("Post with id={} successful created", post.getId());
-        threadDAODataBase.addPost(threadId);
+
+        // Updating thread
+        final String query = "UPDATE thread SET posts = posts + 1 WHERE id=?;";
+        template.update(query, threadId);
 
         final PostDetails<String, String, Long> postDetails = new PostDetails<>(post);
         postDetails.setForum(forumShortName);
         postDetails.setUser(userEmail);
         postDetails.setThread(threadId);
+
+        final long end = System.currentTimeMillis();
+        LOGGER.info("Post with id={} successful created, time: {}", post.getId(), end-start);
         return postDetails;
     }
 
@@ -199,15 +205,18 @@ public class PostDAOImpl implements PostDAO {
 
 
     private int getMaxChildIndex (Long parentId) {
-        final List<String> paths;
+
+
         if (parentId == null) {
-            final String query = "SELECT path FROM post WHERE parent is NULL;";
-            paths = template.queryForList(query, String.class);
+            final String query = "SELECT path FROM post WHERE parent is NULL ORDER BY path DESC LIMIT 1";
+            final String path = template.queryForObject(query, String.class);
+            return Integer.parseInt(path);
         }
-        else {
-            final String query = "SELECT path FROM post WHERE parent = ?;";
-            paths = template.queryForList(query, String.class, parentId);
-        }
+
+        final String query = "SELECT path FROM post WHERE parent = ?;";
+        final  List<String> paths = template.queryForList(query, String.class, parentId);
+
+        
 
         int max = 0;
         if (paths.isEmpty()) {
