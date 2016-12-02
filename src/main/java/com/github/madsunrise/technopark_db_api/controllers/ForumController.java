@@ -19,7 +19,7 @@ import java.util.List;
 @RestController
 public class ForumController {
     private final ForumDAO forumDAO;
-    rivate static final Logger LOGGER = LoggerFactory.getLogger(ForumController.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(ForumController.class.getName());
 
     public ForumController(ForumDAO forumDAO) {
         this.forumDAO = forumDAO;
@@ -115,14 +115,6 @@ public class ForumController {
                             @RequestParam(value = "limit", required = false) Integer limit,
                             @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
                             @RequestParam(value = "since_id", required = false) Long sinceId){
-
-        try {
-            forumDAO.createUserForumTable();
-            forumDAO.fillUserForumTable();
-        }
-        catch (RuntimeException e) {
-            LOGGER.error("UserForum Table was already created");
-        }
 
         final List<UserDetailsExtended> result = forumDAO.getUsers(forumShortName, sinceId, limit, order);
         if (result == null) {
