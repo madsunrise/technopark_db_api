@@ -3,6 +3,8 @@ package com.github.madsunrise.technopark_db_api.controllers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.madsunrise.technopark_db_api.DAO.ForumDAO;
 import com.github.madsunrise.technopark_db_api.response.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -16,10 +18,11 @@ import java.util.List;
  */
 @RestController
 public class ForumController {
-    private final ForumDAO forumDAODataBase;
+    private final ForumDAO forumDAO;
+    rivate static final Logger LOGGER = LoggerFactory.getLogger(ForumController.class.getName());
 
-    public ForumController(ForumDAO forumDAODataBase) {
-        this.forumDAODataBase = forumDAODataBase;
+    public ForumController(ForumDAO forumDAO) {
+        this.forumDAO = forumDAO;
     }
 
 
@@ -31,7 +34,7 @@ public class ForumController {
                 StringUtils.isEmpty(request.shortName) || StringUtils.isEmpty(request.user)) {
             return Result.badRequest();
         }
-        final ForumDetails result = forumDAODataBase.create(request.name, request.shortName, request.user);
+        final ForumDetails result = forumDAO.create(request.name, request.shortName, request.user);
         if (result == null) {
             return Result.notFound();
         }
@@ -49,7 +52,7 @@ public class ForumController {
             return Result.badRequest();
         }
 
-        final ForumDetails result = forumDAODataBase.getDetails(shortName, related);
+        final ForumDetails result = forumDAO.getDetails(shortName, related);
         if (result == null) {
             return Result.notFound();
         }
@@ -72,7 +75,7 @@ public class ForumController {
             since = LocalDateTime.parse(sinceStr, formatter);
         }
 
-        final List<PostDetailsExtended> result = forumDAODataBase.getPosts(forumShortName, since, limit, order, related);
+        final List<PostDetailsExtended> result = forumDAO.getPosts(forumShortName, since, limit, order, related);
         if (result == null) {
             return Result.notFound();
         }
@@ -98,7 +101,7 @@ public class ForumController {
             return Result.ok("\'thread\' GET-parametr...?");
         }
 
-        final List<ThreadDetailsExtended> result = forumDAODataBase.getThreads(forumShortName, since, limit, order, related);
+        final List<ThreadDetailsExtended> result = forumDAO.getThreads(forumShortName, since, limit, order, related);
         if (result == null) {
             return Result.notFound();
         }
@@ -113,8 +116,15 @@ public class ForumController {
                             @RequestParam(value = "order", required = false, defaultValue = "desc") String order,
                             @RequestParam(value = "since_id", required = false) Long sinceId){
 
+        try {
+            forumDAO.createUserForumTable();
+            forumDAO.fillUserForumTable();
+        }
+        catch (RuntimeException e) {
+            LOGGER.error("UserForum Table was already created");
+        }
 
-        final List<UserDetailsExtended> result = forumDAODataBase.getUsers(forumShortName, sinceId, limit, order);
+        final List<UserDetailsExtended> result = forumDAO.getUsers(forumShortName, sinceId, limit, order);
         if (result == null) {
             return Result.notFound();
         }

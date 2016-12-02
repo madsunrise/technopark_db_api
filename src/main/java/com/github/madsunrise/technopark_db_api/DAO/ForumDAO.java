@@ -94,6 +94,7 @@ public class ForumDAO {
             final List<UserDetailsExtended> users = getUsers(forum.getShortName(), null, null, "asc");
             for (UserDetailsExtended user: users) {
                 template.update(query, forum.getId(), user.getId());
+                LOGGER.info("Processing...");
             }
         }
         LOGGER.info("FINISHED!");
