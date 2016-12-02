@@ -1,9 +1,8 @@
 package com.github.madsunrise.technopark_db_api.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.madsunrise.technopark_db_api.DAO.ForumDAOImpl;
+import com.github.madsunrise.technopark_db_api.DAO.ForumDAO;
 import com.github.madsunrise.technopark_db_api.DAO.ThreadDAO;
-import com.github.madsunrise.technopark_db_api.DAO.ThreadDAOImpl;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.Result;
 import com.github.madsunrise.technopark_db_api.response.ThreadDetails;
@@ -23,9 +22,9 @@ import java.util.List;
 public class ThreadController {
 
     private final ThreadDAO threadDAODataBase;
-    private final ForumDAOImpl forumDAODataBase;
+    private final ForumDAO forumDAODataBase;
 
-    public ThreadController(ThreadDAOImpl threadDAODataBase, ForumDAOImpl forumDAODataBase) {
+    public ThreadController(ThreadDAO threadDAODataBase, ForumDAO forumDAODataBase) {
         this.threadDAODataBase = threadDAODataBase;
         this.forumDAODataBase = forumDAODataBase;
     }

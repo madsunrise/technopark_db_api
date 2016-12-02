@@ -1,7 +1,7 @@
 package com.github.madsunrise.technopark_db_api.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.madsunrise.technopark_db_api.DAO.ForumDAOImpl;
+import com.github.madsunrise.technopark_db_api.DAO.ForumDAO;
 import com.github.madsunrise.technopark_db_api.response.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
@@ -16,9 +16,9 @@ import java.util.List;
  */
 @RestController
 public class ForumController {
-    private final ForumDAOImpl forumDAODataBase;
+    private final ForumDAO forumDAODataBase;
 
-    public ForumController(ForumDAOImpl forumDAODataBase) {
+    public ForumController(ForumDAO forumDAODataBase) {
         this.forumDAODataBase = forumDAODataBase;
     }
 
@@ -121,18 +121,7 @@ public class ForumController {
         return Result.ok(result);
     }
 
-
-
-    @RequestMapping(path = "/db/api/forum/forumuser", method = RequestMethod.GET)
-    public void script(){
-
-//        forumDAODataBase.createUserForumTable();
-//        forumDAODataBase.fillUserForumTable();
-    }
-
-
-
-
+    
 
 
     private static class CreateRequest {

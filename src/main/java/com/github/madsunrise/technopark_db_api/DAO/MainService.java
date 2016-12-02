@@ -39,6 +39,13 @@ public class MainService {
         threadDAO.createTable();
         postDAO.createTable();
         createAdditional();
+        try {
+            forumDAO.createUserForumTable();
+            forumDAO.fillUserForumTable();
+        }
+        catch (RuntimeException e) {
+            LOGGER.error("UserForum Table was already created");
+        }
 
     }
     private void createAdditional() {

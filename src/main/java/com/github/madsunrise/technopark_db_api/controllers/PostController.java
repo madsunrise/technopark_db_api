@@ -1,13 +1,12 @@
 package com.github.madsunrise.technopark_db_api.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.madsunrise.technopark_db_api.DAO.ForumDAOImpl;
-import com.github.madsunrise.technopark_db_api.DAO.PostDAOImpl;
-import com.github.madsunrise.technopark_db_api.DAO.ThreadDAOImpl;
+import com.github.madsunrise.technopark_db_api.DAO.ForumDAO;
+import com.github.madsunrise.technopark_db_api.DAO.PostDAO;
+import com.github.madsunrise.technopark_db_api.DAO.ThreadDAO;
 import com.github.madsunrise.technopark_db_api.response.PostDetails;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.Result;
-import com.mysql.jdbc.exceptions.MySQLTransactionRollbackException;
 import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
@@ -23,12 +22,12 @@ import java.util.List;
 @RestController
 public class PostController {
 
-    private final PostDAOImpl postDAODataBase;
-    private final ForumDAOImpl forumDAODataBase;
-    private final ThreadDAOImpl threadDAODataBase;
+    private final PostDAO postDAODataBase;
+    private final ForumDAO forumDAODataBase;
+    private final ThreadDAO threadDAODataBase;
 
-    public PostController(PostDAOImpl postDAODataBase, ForumDAOImpl forumDAODataBase,
-                          ThreadDAOImpl threadDAODataBase) {
+    public PostController(PostDAO postDAODataBase, ForumDAO forumDAODataBase,
+                          ThreadDAO threadDAODataBase) {
         this.postDAODataBase = postDAODataBase;
         this.forumDAODataBase = forumDAODataBase;
         this.threadDAODataBase = threadDAODataBase;
