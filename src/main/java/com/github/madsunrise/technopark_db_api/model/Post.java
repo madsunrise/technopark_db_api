@@ -17,6 +17,7 @@ public class Post {
     private long userId;
     private long forumId;
     private Long parent;
+    private long root;
     private boolean approved;
     private boolean highlighted;
     private boolean edited;
@@ -166,13 +167,12 @@ public class Post {
         return likes - dislikes;
     }
 
-
-    public void like() {
-        likes++;
+    public long getRoot() {
+        return root;
     }
 
-    public void dislike() {
-        dislikes++;
+    public void setRoot(long root) {
+        this.root = root;
     }
 
     public String getPath() {

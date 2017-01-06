@@ -57,8 +57,9 @@ public class PostDAO  {
                 "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY," +
                 "message TEXT NOT NULL," +
                 "date DATETIME NOT NULL," +
-                "path VARCHAR(255) NOT NULL," +
                 "parent BIGINT," +
+                "root BIGINT," +    // ID самого первого поста в иерархии (для корневых постов это свой ID)
+                "path VARCHAR(100)," + // уже не включает самый верхний уровень
                 "approved TINYINT(1) NOT NULL DEFAULT 0," +
                 "highlighted TINYINT(1) NOT NULL DEFAULT 0," +
                 "edited TINYINT(1) NOT NULL DEFAULT 0," +
@@ -114,7 +115,6 @@ public class PostDAO  {
 
         final Post post = new Post(message, date, threadId, user.getId(), forum.getId(),
                 parent, approved, highlighted, edited, spam, deleted);
-        post.setPath(generatePath(parent));
 
         final KeyHolder keyHolder = new GeneratedKeyHolder();
         try {
@@ -126,12 +126,16 @@ public class PostDAO  {
         }
 
         final Map<String, Object> keys = keyHolder.getKeys();
-        post.setId((Long)keys.get("GENERATED_KEY"));
+        post.setId((long)keys.get("GENERATED_KEY"));
+
+        setPathAndRoot(post);
+        final String updatePost = "UPDATE post SET path = ?, root = ? WHERE id = ?;";
+        template.update(updatePost, post.getPath(), post.getRoot(), post.getId());
 
 
         // Updating thread
-        final String query = "UPDATE thread SET posts = posts + 1 WHERE id=?;";
-        template.update(query, threadId);
+        final String threadQuery = "UPDATE thread SET posts = posts + 1 WHERE id=?;";
+        template.update(threadQuery, threadId);
 
         final PostDetails<String, String, Long> postDetails = new PostDetails<>(post);
         postDetails.setForum(forumShortName);
@@ -151,7 +155,7 @@ public class PostDAO  {
 
         public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
             final String query = "INSERT INTO post (message, date, thread_id, user_id, forum_id," +
-                    "path, parent, approved, highlighted, edited, spam, deleted) VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
+                    "path, parent, root, approved, highlighted, edited, spam, deleted) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);";
             final PreparedStatement pst = con.prepareStatement(query,
                     Statement.RETURN_GENERATED_KEYS);
             pst.setString(1, post.getMessage());
@@ -160,7 +164,15 @@ public class PostDAO  {
             pst.setLong(3, post.getThreadId());
             pst.setLong(4, post.getUserId());
             pst.setLong(5, post.getForumId());
-            pst.setString(6, post.getPath());
+
+            String path = post.getPath();
+            if (path != null) {
+                pst.setString(6, path);
+            }
+            else {
+                pst.setNull(6, Types.VARCHAR);
+            }
+
             final Long parent = post.getParent();
             if (parent != null) {
                 pst.setLong(7, post.getParent());
@@ -168,25 +180,37 @@ public class PostDAO  {
             else {
                 pst.setNull(7, Types.BIGINT);
             }
-            pst.setBoolean(8, post.isApproved());
-            pst.setBoolean(9, post.isHighlighted());
-            pst.setBoolean(10, post.isEdited());
-            pst.setBoolean(11, post.isSpam());
-            pst.setBoolean(12, post.isDeleted());
+
+            pst.setLong(8, Types.BIGINT);
+            pst.setBoolean(9, post.isApproved());
+            pst.setBoolean(10, post.isHighlighted());
+            pst.setBoolean(11, post.isEdited());
+            pst.setBoolean(12, post.isSpam());
+            pst.setBoolean(13, post.isDeleted());
             return pst;
         }
     }
 
-    private String generatePath (Long parentId) {
+
+    private void setPathAndRoot (Post post) {
+        if (post.getParent() == null) {
+            post.setRoot(post.getId());
+            post.setPath(null);
+            return;
+        }
+
         final StringBuilder result = new StringBuilder();
-        if (parentId != null) {
-            final Post post = getById(parentId);
-            final String parentPath = post.getPath();
+        final Post parent = getById(post.getParent());
+        post.setRoot(parent.getRoot());
+
+        final String parentPath = parent.getPath();
+        if (parentPath != null) {
             result.append(parentPath);
             result.append('.');
         }
 
-        final int index = getMaxChildIndex(parentId) + 1;
+
+        final int index = getMaxChildIndex(post.getParent()) + 1;
         String indexStr = Integer.toString(index);
         switch (indexStr.length()) {
             case 1: indexStr = "000" + indexStr;
@@ -199,47 +223,21 @@ public class PostDAO  {
         }
 
         result.append(indexStr);
-        return result.toString();
+        post.setPath(result.toString());
     }
 
 
-    private int getMaxChildIndex (Long parentId) {
-
-
-        if (parentId == null) {
-            final String query = "SELECT path FROM post WHERE parent is NULL ORDER BY path DESC LIMIT 1";
-            final String path = template.queryForObject(query, String.class);
-            return Integer.parseInt(path);
+    private int getMaxChildIndex (long parentId) {
+        try {
+            final String query = "SELECT path FROM post WHERE parent = ? ORDER BY path DESC LIMIT 1";
+            final String path = template.queryForObject(query, String.class, parentId);
+            final String[] parts = path.split("\\.");
+            return Integer.parseInt(parts[parts.length - 1]);
         }
-
-        final String query = "SELECT path FROM post WHERE parent = ?;";
-        final  List<String> paths = template.queryForList(query, String.class, parentId);
-
-        
-
-        int max = 0;
-        if (paths.isEmpty()) {
-            return max;
+        catch (EmptyResultDataAccessException e) {
+            LOGGER.info("No paths found");
+            return -1;
         }
-
-        if (paths.get(0).contains(".")) { // пути с точкой
-            for (String path: paths) {
-                final String[] parts = path.split("\\.");
-                final int currentIndex = Integer.parseInt(parts[parts.length - 1]);
-                if (currentIndex > max) {
-                    max = currentIndex;
-                }
-            }
-        }
-        else {
-            for (String path: paths) {
-                final int currentIndex = Integer.parseInt(path);
-                if (currentIndex > max) {
-                    max = currentIndex;
-                }
-            }
-        }
-        return max;
     }
 
 
@@ -532,7 +530,7 @@ public class PostDAO  {
         return result;
     }
 
-    RowMapper<Post> postMapper = (rs, i) -> {
+    private RowMapper<Post> postMapper = (rs, i) -> {
             final String message = rs.getString("message");
             final Timestamp timestamp= rs.getTimestamp("date");
             final LocalDateTime date = timestamp.toLocalDateTime();
@@ -546,12 +544,14 @@ public class PostDAO  {
             final boolean spam = rs.getBoolean("spam");
             final boolean deleted = rs.getBoolean("deleted");
             final long id = rs.getLong("id");
-            final String path = rs.getString("path");
+            final String path = (String) rs.getObject("path");
+            final long root = rs.getLong("root");
             final int likes = rs.getInt("likes");
             final int dislikes = rs.getInt("dislikes");
             final Post result = new Post(message, date, threadId, userId, forumId, parent,
                     approved, highlighted, edited, spam, deleted);
             result.setPath(path);
+            result.setRoot(root);
             result.setId(id);
             result.setLikes(likes);
             result.setDislikes(dislikes);

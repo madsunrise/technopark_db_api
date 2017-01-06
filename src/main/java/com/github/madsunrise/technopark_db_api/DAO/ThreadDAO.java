@@ -175,13 +175,13 @@ public class ThreadDAO {
 
 
     public void addPost(long threadId) {
-        final String query = "UPDATE thread SET posts = posts + 1 WHERE id=?;";
+        final String query = "UPDATE thread SET posts = posts + 1 WHERE id = ?;";
         template.update(query, threadId);
     }
 
 
     public void removePost(long threadId) {
-        final String query = "UPDATE thread SET posts = posts - 1 WHERE id=?;";
+        final String query = "UPDATE thread SET posts = posts - 1 WHERE id = ?;";
         template.update(query, threadId);
     }
 

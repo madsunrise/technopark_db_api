@@ -7,6 +7,8 @@ import com.github.madsunrise.technopark_db_api.DAO.ThreadDAO;
 import com.github.madsunrise.technopark_db_api.response.PostDetails;
 import com.github.madsunrise.technopark_db_api.response.PostDetailsExtended;
 import com.github.madsunrise.technopark_db_api.response.Result;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
@@ -25,6 +27,7 @@ public class PostController {
     private final PostDAO postDAODataBase;
     private final ForumDAO forumDAODataBase;
     private final ThreadDAO threadDAODataBase;
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostController.class.getName());
 
     public PostController(PostDAO postDAODataBase, ForumDAO forumDAODataBase,
                           ThreadDAO threadDAODataBase) {
@@ -44,24 +47,18 @@ public class PostController {
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         final LocalDateTime date = LocalDateTime.parse(request.date, formatter);
 
-        PostDetails<String, String, String> result = null;
+        PostDetails<String, String, String> result;
 
-        int count = 0;
-        while (true) {
             try {
-                if (count > 10) {
-                    break;
-                }
 
                 result = postDAODataBase.create(date, request.thread, request.message,
                         request.user, request.forum, request.parent, request.approved, request.highlighted, request.edited,
                         request.spam, request.deleted);
 
-                break;
             } catch (DeadlockLoserDataAccessException e) {
-                e.printStackTrace();
-                count++;
-            }
+                LOGGER.error("Deadlock!");
+                return Result.badRequest();
+
         }
 
         if (result == null) {

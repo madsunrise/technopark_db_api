@@ -38,7 +38,6 @@ public class ForumController {
         if (result == null) {
             return Result.notFound();
         }
-        //forumDAO.create(request.name, request.shortName, request.user);
         return Result.ok(result);
     }
 

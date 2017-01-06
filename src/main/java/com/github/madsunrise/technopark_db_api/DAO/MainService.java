@@ -44,34 +44,45 @@ public class MainService {
     private void createAdditional() {
         createSubscription();
         createFollowing();
+        createUserForum();
         LOGGER.info("Additional tables were created");
     }
 
     private void createSubscription() {
-        final String createTable = "CREATE TABLE subscription (" +
+        final String createTable = "CREATE TABLE IF NOT EXISTS subscription (" +
                 "user_id BIGINT NOT NULL," +
                 "thread_id BIGINT NOT NULL," +
                 "FOREIGN KEY (user_id) REFERENCES user(id)," +
                 "FOREIGN KEY (thread_id) REFERENCES thread(id)," +
-                "PRIMARY KEY (user_id, thread_id)) CHARACTER SET utf8" +
-                " DEFAULT COLLATE utf8_general_ci;";
+                "PRIMARY KEY (user_id, thread_id))";
         template.execute(createTable);
     }
 
     private void createFollowing() {
-        final String createTable = "CREATE TABLE following (" +
+        final String createTable = "CREATE TABLE IF NOT EXISTS following (" +
                 "follower_id BIGINT NOT NULL," +
                 "followee_id BIGINT NOT NULL," +
                 "FOREIGN KEY (follower_id) REFERENCES user(id)," +
                 "FOREIGN KEY (followee_id) REFERENCES user(id)," +
-                "PRIMARY KEY (follower_id, followee_id)) CHARACTER SET utf8" +
-                " DEFAULT COLLATE utf8_general_ci;";
+                "PRIMARY KEY (follower_id, followee_id))";
         template.execute(createTable);
+    }
+
+    private void createUserForum() {
+        final String createTable = "CREATE TABLE IF NOT EXISTS user_forum (" +
+                "id BIGINT PRIMARY KEY auto_increment," +
+                "user_id BIGINT NOT NULL," +
+                "forum_id BIGINT NOT NULL," +
+                "UNIQUE KEY (user_id, forum_id)," +
+                "UNIQUE KEY (forum_id, user_id))";
+        template.execute(createTable);
+
     }
 
     private void dropAdditional() {
         dropSubscription();
         dropFollowing();
+        dropUserForum();
         LOGGER.info("Additional tables were dropped");
     }
 
@@ -82,6 +93,11 @@ public class MainService {
 
     private void dropFollowing() {
         final String dropTable = "DROP TABLE IF EXISTS following";
+        template.execute(dropTable);
+    }
+
+    private void dropUserForum() {
+        final String dropTable = "DROP TABLE IF EXISTS user_forum";
         template.execute(dropTable);
     }
 

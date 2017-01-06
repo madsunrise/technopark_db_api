@@ -68,14 +68,6 @@ public class ForumDAO {
     }
 
 
-    public void createUserForumTable() {
-        final String createTable = "CREATE TABLE user_forum (" +
-                "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY," +
-                "user_id BIGINT NOT NULL," +
-                "forum_id BIGINT NOT NULL," +
-                "UNIQUE KEY (user_id, forum_id));";
-        template.execute(createTable);
-    }
 
     public void fillUserForumTable() {
         final String getAllForums = "SELECT * FROM forum";
