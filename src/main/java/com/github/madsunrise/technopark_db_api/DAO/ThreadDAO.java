@@ -529,9 +529,7 @@ public class ThreadDAO {
     static class PathComparatorAsc implements Comparator<PostDetailsExtended> {
         @Override
         public int compare(PostDetailsExtended p1, PostDetailsExtended p2) {
-            final String path1 = p1.getPath();
-            final String path2 = p2.getPath();
-            return path1.compareTo(path2);
+            return 1;
         }
     }
 

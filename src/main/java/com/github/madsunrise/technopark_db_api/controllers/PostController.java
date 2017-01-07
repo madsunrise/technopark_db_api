@@ -47,18 +47,24 @@ public class PostController {
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         final LocalDateTime date = LocalDateTime.parse(request.date, formatter);
 
-        PostDetails<String, String, String> result;
+        PostDetails<String, String, String> result = null;
 
+        int count = 0;
+        while (true) {
             try {
+                if (count > 10) {
+                    break;
+                }
 
                 result = postDAODataBase.create(date, request.thread, request.message,
                         request.user, request.forum, request.parent, request.approved, request.highlighted, request.edited,
                         request.spam, request.deleted);
 
+                break;
             } catch (DeadlockLoserDataAccessException e) {
-                LOGGER.error("Deadlock!");
-                return Result.badRequest();
-
+                count++;
+                LOGGER.error("DEADLOCK! Attempt #{}", count);
+            }
         }
 
         if (result == null) {

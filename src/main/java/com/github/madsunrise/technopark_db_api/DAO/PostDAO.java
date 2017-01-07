@@ -234,7 +234,7 @@ public class PostDAO  {
             final String[] parts = path.split("\\.");
             return Integer.parseInt(parts[parts.length - 1]);
         }
-        catch (EmptyResultDataAccessException e) {
+        catch (EmptyResultDataAccessException | NullPointerException e) {
             LOGGER.info("No paths found");
             return -1;
         }
