@@ -137,6 +137,16 @@ public class PostDAO  {
         final String threadQuery = "UPDATE thread SET posts = posts + 1 WHERE id=?;";
         template.update(threadQuery, threadId);
 
+        // Updating user_forum
+        try {
+            final String userForumQuery = "INSERT INTO user_forum (user_id, forum_id) VALUES (?, ?)";
+            template.update(userForumQuery, user.getId(), forum.getId());
+        }
+        catch (DuplicateKeyException e) {
+            
+        }
+
+
         final PostDetails<String, String, Long> postDetails = new PostDetails<>(post);
         postDetails.setForum(forumShortName);
         postDetails.setUser(userEmail);
@@ -329,35 +339,74 @@ public class PostDAO  {
 
 
 
-    public List<PostDetailsExtended> getPostsByThread(long threadId, LocalDateTime since, Integer limit, String order) {
-        final String query = "SELECT * FROM post WHERE thread_id=? AND date >= ? ORDER BY date " + order + " LIMIT ?;";
-        final List<Post> posts = template.query(query, postMapper,
-                threadId, since, limit);
+    public List<PostDetailsExtended> getPostsByThread(long threadId, LocalDateTime since,
+                                                      String sortType, String order, Integer limit) {
+        final StringBuilder query = new StringBuilder("SELECT * FROM post WHERE thread_id = ? ");
+
+        if (since != null) {
+            query.append("AND date >= ? ");
+        }
+
+        String sortPart;
+        switch (sortType) {
+            case "flat":
+                sortPart = "date " + order;
+                break;
+            case "tree":
+            case "parent_tree":
+                sortPart = "root " + order + ", path ASC";
+                break;
+            default:
+                sortPart = "";
+        }
+
+        query.append("ORDER BY ");
+        query.append(sortPart);
+
+        if (limit != null && !sortType.equals("parent_tree")) {
+            query.append(" LIMIT ?");
+        }
+
+        List<Post> posts;
+        if (since != null) {
+            if (limit != null && !sortType.equals("parent_tree")) {
+                posts = template.query(query.toString(), postMapper,
+                        threadId, since, limit);
+            }
+            else {
+                posts = template.query(query.toString(), postMapper,
+                        threadId, since);
+            }
+        }
+        else {
+            if (limit != null && !sortType.equals("parent_tree")) {
+                posts = template.query(query.toString(), postMapper,
+                        threadId, limit);
+            }
+            else {
+                posts = template.query(query.toString(), postMapper,
+                        threadId);
+            }
+        }
+
+        // Slice in case parent tree
+        if (limit != null && sortType.equals("parent_tree")) {
+            int rootCount = 0;
+            int postsCount = 0;
+            for (Post post: posts) {
+                if (post.getParent() == null) {  // Перед нами корневой пост
+                    rootCount++;
+                    if (rootCount > limit) {
+                        break;
+                    }
+                }
+                postsCount++;
+            }
+            posts = posts.subList(0, postsCount);
+        }
+
         return listPostToPostDetails(posts, null);
     }
-
-    public List<PostDetailsExtended> getPostsByThread (long threadId, LocalDateTime since, String order) {
-        final String query = "SELECT * FROM post WHERE thread_id=? AND date >= ? ORDER BY date " + order + ';';
-        final List<Post> posts = template.query(query, postMapper,
-                threadId, since);
-        return listPostToPostDetails(posts, null);
-    }
-
-    public List<PostDetailsExtended> getPostsByThread (long threadId, Integer limit, String order) {
-        final String query = "SELECT * FROM post WHERE thread_id=? ORDER BY date " + order + " LIMIT ?";
-        final List<Post> posts = template.query(query, postMapper,
-                threadId, limit);
-        return listPostToPostDetails(posts, null);
-    }
-
-    public List<PostDetailsExtended> getPostsByThread (long threadId, String order) {
-        final String query = "SELECT * FROM post WHERE thread_id=? ORDER BY date " + order + ';';
-        final List<Post> posts = template.query(query, postMapper,
-                threadId);
-        return listPostToPostDetails(posts, null);
-    }
-
-
 
 
     public List<PostDetailsExtended> getPostsByUser(String userEmail, String order) {

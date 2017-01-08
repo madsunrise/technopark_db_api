@@ -301,57 +301,7 @@ public class ThreadDAO {
             return null;
         }
 
-        final List<PostDetailsExtended> posts;
-        if (since == null) {
-            if (limit != null && sort.equals("flat")) {
-                posts = postDAODataBase.getPostsByThread(threadId, limit, order);
-            }
-            else {
-                posts = postDAODataBase.getPostsByThread(threadId, order);
-            }
-        }
-        else {
-            if (limit != null && sort.equals("flat")) {
-                posts = postDAODataBase.getPostsByThread(threadId, since, limit, order);
-            }
-            else {
-                posts = postDAODataBase.getPostsByThread(threadId, since, order);
-            }
-        }
-
-        if (sort.equals("flat")) {
-            return posts;
-        }
-
-
-        // tree и parent_tree сортировки
-        if (order.equals("asc")) {
-            Collections.sort(posts, new PathComparatorAsc());
-        }
-        else {
-            Collections.sort(posts, new PathComparatorDesc());
-        }
-
-
-        if (limit != null && limit < posts.size()) {
-            if (sort.equals("parent_tree")) {
-                int rootCount = 0;
-                int postsCount = 0;
-                for (PostDetailsExtended postDetails: posts) {
-                    final String path = postDetails.getPath();
-                    if (!path.contains(".")) {  // Перед нами корневой пост
-                        rootCount++;
-                        if (rootCount > limit) {
-                            break;
-                        }
-                    }
-                    postsCount++;
-                }
-                return posts.subList(0, postsCount);
-            }
-            return posts.subList(0, limit); // для tree
-        }
-        return posts;
+        return postDAODataBase.getPostsByThread(threadId, since, sort, order, limit);
     }
 
 
@@ -525,31 +475,6 @@ public class ThreadDAO {
         return threadsDetails;
     }
 
-
-    static class PathComparatorAsc implements Comparator<PostDetailsExtended> {
-        @Override
-        public int compare(PostDetailsExtended p1, PostDetailsExtended p2) {
-            return 1;
-        }
-    }
-
-    static class PathComparatorDesc implements Comparator<PostDetailsExtended> {
-        @Override
-        public int compare(PostDetailsExtended p1, PostDetailsExtended p2) {
-            final String path1 = p1.getPath();
-            final String path2 = p2.getPath();
-            if (path1.contains(".") || path2.contains(".")) {
-                final String[] array1 = path1.split("\\.");
-                final String[] array2 = path2.split("\\.");
-                if (array1[0].equals(array2[0])) {
-                    return path1.compareTo(path2);
-                } else {
-                    return path2.compareTo(path1);
-                }
-            }
-            return path2.compareTo(path1);
-        }
-    }
 
 
 
