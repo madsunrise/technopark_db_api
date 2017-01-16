@@ -7,34 +7,34 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class StatusResponse {
     @JsonProperty("user")
-    private long userCount;
+    private int userCount;
     @JsonProperty("thread")
-    private long threadCount;
+    private int threadCount;
     @JsonProperty("forum")
-    private long forumCount;
+    private int forumCount;
     @JsonProperty("post")
-    private long postCount;
+    private int postCount;
 
-    public StatusResponse(long userCount, long threadCount, long forumCount, long postCount) {
+    public StatusResponse(int userCount, int threadCount, int forumCount, int postCount) {
         this.userCount = userCount;
         this.threadCount = threadCount;
         this.forumCount = forumCount;
         this.postCount = postCount;
     }
 
-    public long getUserCount() {
+    public int getUserCount() {
         return userCount;
     }
 
-    public long getThreadCount() {
+    public int getThreadCount() {
         return threadCount;
     }
 
-    public long getForumCount() {
+    public int getForumCount() {
         return forumCount;
     }
 
-    public long getPostCount() {
+    public int getPostCount() {
         return postCount;
     }
 }

@@ -31,11 +31,6 @@ public class MainController {
     @ResponseBody
     @ResponseStatus(HttpStatus.OK)
     public Result status() {
-        final long postCount = mainService.getPostAmount();
-        final long threadCount = mainService.getThreadAmount();
-        final long forumCount = mainService.getForumAmount();
-        final long userCount = mainService.getUserAmount();
-        final StatusResponse result = new StatusResponse(userCount, threadCount, forumCount, postCount);
-        return Result.ok(result);
+        return Result.ok(mainService.getStatus());
     }
 }

@@ -1,5 +1,6 @@
 package com.github.madsunrise.technopark_db_api.DAO;
 
+import com.github.madsunrise.technopark_db_api.response.StatusResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -101,23 +102,23 @@ public class MainService {
         template.execute(dropTable);
     }
 
-    public long getUserAmount() {
-	LOGGER.info("User count was got");
-        return userDAO.getAmount();
-    }
 
-    public long getForumAmount() {
-	LOGGER.info("Forum count was got");
-        return forumDAO.getAmount();
-    }
+    public synchronized StatusResponse getStatus()  {
+        String query = "SELECT COUNT(*) FROM user";
+        int userCount = template.queryForObject(query, Integer.class);
+        LOGGER.info("User count was got");
 
-    public long getThreadAmount() {
-	LOGGER.info("Thread count was got");
-        return threadDAO.getAmount();
-    }
+        query = "SELECT COUNT(*) FROM forum";
+        int forumCount = template.queryForObject(query, Integer.class);
+        LOGGER.info("Forum count was got");
 
-    public long getPostAmount() {
-	LOGGER.info("Post count was got");
-        return postDAO.getAmount();
+        query = "SELECT COUNT(*) FROM thread";
+        int threadCount = template.queryForObject(query, Integer.class);
+        LOGGER.info("Thread count was got");
+
+        query = "SELECT COUNT(*) FROM post";
+        int postCount = template.queryForObject(query, Integer.class);
+        LOGGER.info("Post count was got");
+        return new StatusResponse(userCount, threadCount, forumCount, postCount);
     }
 }
