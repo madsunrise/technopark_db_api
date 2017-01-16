@@ -123,7 +123,7 @@ public class ThreadDAO {
         }
         final User user = userDAODataBase.getByEmail(userEmail);
         if (user == null) {
-            LOGGER.info("Error creating thread because user \"{}\" does not exist!", userEmail);
+//            LOGGER.info("Error creating thread because user \"{}\" does not exist!", userEmail);
             return null;
         }
 
@@ -133,7 +133,7 @@ public class ThreadDAO {
             template.update(new ThreadPstCreator(thread), keyHolder);
         }
         catch (DuplicateKeyException e) {
-            LOGGER.info("Error creating thread because it already exists!");
+  //          LOGGER.info("Error creating thread because it already exists!");
             return null;
         }
 
@@ -145,7 +145,7 @@ public class ThreadDAO {
         threadDetails.setUser(userEmail);
 
         final long end = System.currentTimeMillis();
-        LOGGER.info("Thread with title={} successful created, time: {}", title, end-start);
+    //    LOGGER.info("Thread with title={} successful created, time: {}", title, end-start);
         return threadDetails;
     }
 
@@ -194,7 +194,7 @@ public class ThreadDAO {
             LOGGER.info("Closing thread with ID={} failed", threadId);
             return false;
         }
-        LOGGER.info("Closed thread with ID={}", threadId);
+      //  LOGGER.info("Closed thread with ID={}", threadId);
         return true;
     }
 
@@ -206,7 +206,7 @@ public class ThreadDAO {
             LOGGER.info("Opening thread with ID={} failed", threadId);
             return false;
         }
-        LOGGER.info("Opened thread with ID={}", threadId);
+        //LOGGER.info("Opened thread with ID={}", threadId);
         return true;
     }
 
@@ -223,7 +223,7 @@ public class ThreadDAO {
             return null;
         }
 
-        LOGGER.info("Getting thread (ID={}) details is success", threadId);
+       // LOGGER.info("Getting thread (ID={}) details is success", threadId);
         return threadToThreadDetails(thread, related);
     }
 
@@ -238,7 +238,7 @@ public class ThreadDAO {
         }
 
         postDAODataBase.markDeleted(threadId);
-        LOGGER.info("Removed thread with ID={}", threadId);
+      //  LOGGER.info("Removed thread with ID={}", threadId);
         return true;
     }
 
@@ -251,7 +251,7 @@ public class ThreadDAO {
             return false;
         }
         postDAODataBase.markRestored(threadId);
-        LOGGER.info("Restored thread with ID={}", threadId);
+       // LOGGER.info("Restored thread with ID={}", threadId);
         return true;
     }
 
@@ -269,7 +269,7 @@ public class ThreadDAO {
             LOGGER.info("Error subscribing user because user with email={} does not exist!", userEmail);
             return null;
         }
-        LOGGER.info("User {} has subscribed to thread with ID={}", userEmail, threadId);
+        //LOGGER.info("User {} has subscribed to thread with ID={}", userEmail, threadId);
         return thread.getId();
     }
 
@@ -285,7 +285,7 @@ public class ThreadDAO {
             LOGGER.info("Error unsubscribing user because user with email={} does not exist!", userEmail);
             return null;
         }
-        LOGGER.info("User {} has unsubscribed from thread with ID={}", userEmail, threadId);
+        //LOGGER.info("User {} has unsubscribed from thread with ID={}", userEmail, threadId);
         return thread.getId();
     }
 

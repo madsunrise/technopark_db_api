@@ -109,7 +109,7 @@ public class UserDAO {
         final Map<String, Object> keys = keyHolder.getKeys();
         user.setId((Long)keys.get("GENERATED_KEY"));
         final long end = System.currentTimeMillis();
-        LOGGER.info("User with email \"{}\" successful created, time: {}", email, end-start);
+//        LOGGER.info("User with email \"{}\" successful created, time: {}", email, end-start);
         return new UserDetails(user);
     }
 
@@ -138,7 +138,7 @@ public class UserDAO {
             LOGGER.info("Error getting user details - user with ID=\"{}\" does not exist!", userId);
             return null;
         }
-        LOGGER.info("Getting user with ID=\"{}\" details is success", userId);
+  //      LOGGER.info("Getting user with ID=\"{}\" details is success", userId);
         return new UserDetailsExtended(user);
 
     }
@@ -150,7 +150,7 @@ public class UserDAO {
             LOGGER.info("Error getting user details - user with email \"{}\" does not exist!", email);
             return null;
         }
-        LOGGER.info("Getting user \"{}\" details is success", email);
+    //    LOGGER.info("Getting user \"{}\" details is success", email);
         return new UserDetailsExtended(user);
 
     }
@@ -176,7 +176,7 @@ public class UserDAO {
             follower.addFollowee(followeeEmail);
             return new UserDetailsExtended(follower);
         }
-        LOGGER.info("{} has followed {}", followerEmail, followeeEmail);
+      //  LOGGER.info("{} has followed {}", followerEmail, followeeEmail);
         return new UserDetailsExtended(follower);
     }
 
@@ -198,7 +198,7 @@ public class UserDAO {
 
         template.update(query, follower.getId(), followee.getId());
 
-        LOGGER.info("{} has unfollowed {}", followerEmail, followeeEmail);
+      //  LOGGER.info("{} has unfollowed {}", followerEmail, followeeEmail);
         return new UserDetailsExtended(follower);
     }
 
@@ -211,7 +211,7 @@ public class UserDAO {
                 " WHERE user.email = ? ORDER BY name " + order + ';';
 
         final List<User> users = template.query(query, userMapper, email);
-        LOGGER.info("Getting followers for user {} is success", email);
+        //LOGGER.info("Getting followers for user {} is success", email);
         return usersToUsersDetails(users);
     }
 
@@ -223,7 +223,7 @@ public class UserDAO {
                 " WHERE user.email = ? AND follower.id >= ? ORDER BY name " + order + ';';
 
         final List<User> users = template.query(query, userMapper, email, sinceId);
-        LOGGER.info("Getting followers for user {} is success", email);
+        //LOGGER.info("Getting followers for user {} is success", email);
         return usersToUsersDetails(users);
     }
 
@@ -235,7 +235,7 @@ public class UserDAO {
                 " WHERE user.email = ? ORDER BY name " + order + " LIMIT ?";
 
         final List<User> users = template.query(query, userMapper, email, limit);
-        LOGGER.info("Getting followers for user {} is success", email);
+        //LOGGER.info("Getting followers for user {} is success", email);
         return usersToUsersDetails(users);
     }
 
@@ -247,7 +247,7 @@ public class UserDAO {
                 " WHERE user.email = ? AND follower.id >= ? ORDER BY name " + order + " LIMIT ?";
 
         final List<User> users = template.query(query, userMapper, email, sinceId, limit);
-        LOGGER.info("Getting followers for user {} is success", email);
+        //LOGGER.info("Getting followers for user {} is success", email);
         return usersToUsersDetails(users);
     }
 
@@ -261,7 +261,7 @@ public class UserDAO {
                 " WHERE user.email = ? ORDER BY name " + order + ';';
 
         final List<User> users = template.query(query, userMapper, email);
-        LOGGER.info("Getting followees for user {} is success", email);
+        //LOGGER.info("Getting followees for user {} is success", email);
         return usersToUsersDetails(users);
     }
 
@@ -273,7 +273,7 @@ public class UserDAO {
                 " WHERE user.email = ? AND followee.id >= ? ORDER BY name " + order + ';';
 
         final List<User> users = template.query(query, userMapper, email, sinceId);
-        LOGGER.info("Getting followees for user {} is success", email);
+        //LOGGER.info("Getting followees for user {} is success", email);
         return usersToUsersDetails(users);
     }
 
@@ -285,7 +285,7 @@ public class UserDAO {
                 " WHERE user.email = ? ORDER BY name " + order + " LIMIT ?";
 
         final List<User> users = template.query(query, userMapper, email, limit);
-        LOGGER.info("Getting followees for user {} is success", email);
+        //LOGGER.info("Getting followees for user {} is success", email);
         return usersToUsersDetails(users);
     }
 
@@ -297,7 +297,7 @@ public class UserDAO {
                 " WHERE user.email = ? AND followee.id >= ? ORDER BY name " + order + " LIMIT ?";
 
         final List<User> users = template.query(query, userMapper, email, sinceId, limit);
-        LOGGER.info("Getting followees for user {} is success", email);
+        //LOGGER.info("Getting followees for user {} is success", email);
         return usersToUsersDetails(users);
     }
 
@@ -311,7 +311,7 @@ public class UserDAO {
             return null;
         }
         final User user = getByEmail(email);
-        LOGGER.info("User profile has been updated (email {})", email);
+        //LOGGER.info("User profile has been updated (email {})", email);
         return new UserDetailsExtended(user);
     }
 
@@ -330,7 +330,7 @@ public class UserDAO {
             LOGGER.info("User {} already subscribed on thread with id={}!", email, threadId);
             return userId;
         }
-        LOGGER.info("User {} has subscribed on thread with id={}", email, threadId);
+        //LOGGER.info("User {} has subscribed on thread with id={}", email, threadId);
         return userId;
     }
 
@@ -343,7 +343,7 @@ public class UserDAO {
         final String query = "DELETE FROM subscription WHERE user_id=? AND thread_id=?;";
             template.update(query, userId, threadId);
 
-        LOGGER.info("User {} has unsubscribed fro, thread with id={}", email, threadId);
+        //LOGGER.info("User {} has unsubscribed fro, thread with id={}", email, threadId);
         return userId;
     }
 
@@ -374,7 +374,7 @@ public class UserDAO {
                 " FROM user u JOIN user_forum uf ON u.id = uf.user_id " +
                 "WHERE uf.forum_id = ? ORDER BY u.name " + order + ';';
         final List<User> users = template.query(query, userMapper, forumId);
-        LOGGER.info("Getting users of forum {} is successful", forumShortName);
+        //LOGGER.info("Getting users of forum {} is successful", forumShortName);
         return usersToUsersDetails(users);
     }
 
@@ -386,7 +386,7 @@ public class UserDAO {
                 "WHERE uf.forum_id = ?" +
                 " AND u.id >= ?  ORDER BY u.name " + order + ';';
         final List<User> users = template.query(query, userMapper, forumId, sinceId);
-        LOGGER.info("Getting users of forum {} is successful", forumShortName);
+        //LOGGER.info("Getting users of forum {} is successful", forumShortName);
         return usersToUsersDetails(users);
     }
 
@@ -399,7 +399,7 @@ public class UserDAO {
                 "WHERE uf.forum_id = ?" +
                 " ORDER BY u.name " + order + " LIMIT ?";
         final List<User> users = template.query(query, userMapper, forumId, limit);
-        LOGGER.info("Getting users of forum {} is successful", forumShortName);
+    //    LOGGER.info("Getting users of forum {} is successful", forumShortName);
         return usersToUsersDetails(users);
     }
 
@@ -410,7 +410,7 @@ public class UserDAO {
                 "WHERE uf.forum_id = ?" +
                 " AND u.id >= ?  ORDER BY name " + order + " LIMIT ?";
         final List<User> users = template.query(query, userMapper, forumId, sinceId, limit);
-        LOGGER.info("Getting users of forum {} is successful", forumShortName);
+      //  LOGGER.info("Getting users of forum {} is successful", forumShortName);
         return usersToUsersDetails(users);
     }
 

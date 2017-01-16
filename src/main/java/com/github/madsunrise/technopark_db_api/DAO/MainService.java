@@ -102,18 +102,22 @@ public class MainService {
     }
 
     public long getUserAmount() {
+	LOGGER.info("User count was got");
         return userDAO.getAmount();
     }
 
     public long getForumAmount() {
+	LOGGER.info("Forum count was got");
         return forumDAO.getAmount();
     }
 
     public long getThreadAmount() {
+	LOGGER.info("Thread count was got");
         return threadDAO.getAmount();
     }
 
     public long getPostAmount() {
+	LOGGER.info("Post count was got");
         return postDAO.getAmount();
     }
 }

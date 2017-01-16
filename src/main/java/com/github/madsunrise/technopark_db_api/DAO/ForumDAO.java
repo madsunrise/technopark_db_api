@@ -142,7 +142,7 @@ public class ForumDAO {
 
 
     public ForumDetails create(String name, String shortName, String userEmail) {
-        final long start = System.currentTimeMillis();
+   //     final long start = System.currentTimeMillis();
         final User user = userDAODataBase.getByEmail(userEmail);
         if (user == null) {
             LOGGER.info("Error creating forum because user \"{}\" does not exist!", userEmail);
@@ -160,8 +160,8 @@ public class ForumDAO {
         }
         final Map<String, Object> keys = keyHolder.getKeys();
         forum.setId((Long)keys.get("GENERATED_KEY"));
-        final long end = System.currentTimeMillis();
-        LOGGER.info("Forum \"{}\" successful created, time: {}", shortName, end-start);
+ //       final long end = System.currentTimeMillis();
+//        LOGGER.info("Forum \"{}\" successful created, time: {}", shortName, end-start);
         return new ForumDetails(forum);
     }
 
@@ -175,7 +175,7 @@ public class ForumDAO {
             return null;
         }
 
-        LOGGER.info("Getting forum details with ID=\"{}\" is success", forumId);
+     //   LOGGER.info("Getting forum details with ID=\"{}\" is success", forumId);
         final User user = userDAODataBase.getById(forum.getUserId());
         if (related != null && related.contains("user")) {
             final UserDetailsExtended userDetails = new UserDetailsExtended(user);
@@ -198,7 +198,7 @@ public class ForumDAO {
             return null;
         }
 
-        LOGGER.info("Getting forum details \"{}\" is success", shortName);
+       // LOGGER.info("Getting forum details \"{}\" is success", shortName);
         final User user = userDAODataBase.getById(forum.getUserId());
         if (related != null && related.contains("user")) {
             final UserDetailsExtended userDetails = new UserDetailsExtended(user);

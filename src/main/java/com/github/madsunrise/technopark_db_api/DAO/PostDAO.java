@@ -153,7 +153,7 @@ public class PostDAO  {
         postDetails.setThread(threadId);
 
         final long end = System.currentTimeMillis();
-        LOGGER.info("Post with id={} successful created, time: {}", post.getId(), end-start);
+//       LOGGER.info("Post with id={} successful created, time: {}", post.getId(), end-start);
         return postDetails;
     }
 
@@ -245,7 +245,7 @@ public class PostDAO  {
             return Integer.parseInt(parts[parts.length - 1]);
         }
         catch (EmptyResultDataAccessException | NullPointerException e) {
-            LOGGER.info("No paths found");
+ //           LOGGER.info("No paths found");
             return -1;
         }
     }
@@ -263,7 +263,7 @@ public class PostDAO  {
             LOGGER.info("Error getting post details - post with ID={}: does not exist!", id);
             return null;
         }
-        LOGGER.info("Getting post (ID={}) details is success", id);
+   //     LOGGER.info("Getting post (ID={}) details is success", id);
         return postToPostDetails (post, related);
     }
 
@@ -475,7 +475,7 @@ public class PostDAO  {
         }
         final Post post = getById(postId);
         threadDAODataBase.removePost(post.getThreadId());
-        LOGGER.info("Removed post with ID={}", postId);
+     //   LOGGER.info("Removed post with ID={}", postId);
         return true;
     }
 
@@ -489,7 +489,7 @@ public class PostDAO  {
         }
         final Post post = getById(postId);
         threadDAODataBase.addPost(post.getThreadId());
-        LOGGER.info("Restored post with ID={}", postId);
+       // LOGGER.info("Restored post with ID={}", postId);
         return true;
     }
 
